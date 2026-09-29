@@ -323,10 +323,8 @@ const uz = {
     empty: "Hozircha hech narsa topilmadi. Birinchi o'yinchoqni qo'shing!",
   },
   swipe: {
+    greeting: "Salom, {{name}}",
     question: "almashamizmi?",
-    howto: "o'ngga — ha · chapga — yo'q",
-    skipHint: "← o'tkazish",
-    tradeHint: "almashish →",
     addFirst: "Avval o'z o'yinchog'ingizni qo'shing — aks holda almashadigan narsa yo'q.",
     add: "Qo'shish",
     building: "Kartalar tanlanmoqda…",

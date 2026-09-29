@@ -241,26 +241,15 @@ export function SwipeDeck() {
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-3">
-      <header className="flex items-end justify-between gap-3 animate-rise">
-        <div>
-          <p className="font-display text-[2rem] leading-none text-ink sm:text-4xl">
-            {t("swipe.question")}
+      <header className="flex items-center justify-between gap-3 animate-rise">
+        <div className="min-w-0">
+          <p className="break-words font-display text-[1.6rem] leading-tight text-ink min-[400px]:text-[2rem] sm:text-4xl">
+            {t("swipe.greeting", { name: user.name.trim().split(/\s+/)[0] })}
           </p>
-          <p className="mt-1 text-sm font-semibold text-ink/50">
-            {t("swipe.howto")}
-          </p>
+          <p className="mt-0.5 text-base font-bold text-forest">{t("swipe.question")}</p>
         </div>
         <ToyMascot className="w-16 shrink-0 sm:w-20" mood={exit === "right" ? "yay" : "idle"} />
       </header>
-
-      <div className="flex gap-2 pb-1">
-        <span className="btn-3d btn-3d-coral btn-3d-sm pointer-events-none rounded-full px-3 py-1 text-xs font-extrabold">
-          {t("swipe.skipHint")}
-        </span>
-        <span className="btn-3d btn-3d-lime btn-3d-sm pointer-events-none rounded-full px-3 py-1 text-xs font-extrabold">
-          {t("swipe.tradeHint")}
-        </span>
-      </div>
 
       {myItemCount === 0 && (
         <div
@@ -304,17 +293,17 @@ export function SwipeDeck() {
             <p className="text-sm font-semibold text-ink/55">
               {t("swipe.emptyText")}
             </p>
-            <div className="flex flex-col gap-2 pt-2 sm:flex-row">
+            <div className="flex w-full max-w-xs gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => load()}
-                className="btn-3d btn-3d-ink inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-bold"
+                className="btn-3d btn-3d-ink inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full px-4 text-sm font-bold"
               >
                 <RotateCcw size={16} /> {t("swipe.refresh")}
               </button>
               <Link
                 to="/browse"
-                className="btn-3d btn-3d-white inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-bold"
+                className="btn-3d btn-3d-white inline-flex min-h-11 flex-1 items-center justify-center rounded-full px-4 text-sm font-bold"
               >
                 {t("swipe.catalog")}
               </Link>

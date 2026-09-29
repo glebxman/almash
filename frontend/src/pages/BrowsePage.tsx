@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Search, SlidersHorizontal, Sparkles, X } from "lucide-react";
+import { RotateCcw, Search, SlidersHorizontal, Sparkles, X } from "lucide-react";
 import { FancySelect } from "@/components/FancySelect";
 import { ItemCard, type ItemCardData } from "@/components/ItemCard";
 import { useAuth } from "@/components/AuthProvider";
@@ -11,6 +11,17 @@ import { useTranslation } from "react-i18next";
 import { useLabels } from "@/lib/labels";
 
 type Feed = "new" | "nearby" | "for_me";
+
+/** Group caption shown before an active filter chip ("Категория · Игрушки"). */
+const FILTER_GROUP: Record<string, string | undefined> = {
+  category: "browse.categoryLabel",
+  subcategory: "browse.categoryLabel",
+  condition: "browse.conditionLabel",
+  age: "browse.ageLabel",
+  brand: "browse.brandLabel",
+  city: "browse.placeLabel",
+  district: "browse.placeLabel",
+};
 
 export default function BrowsePage() {
   const { user } = useAuth();
@@ -162,22 +173,32 @@ export default function BrowsePage() {
 
           {activeFilters.length > 0 && (
               <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2.5 pb-1">
-                {activeFilters.map((f) => (
-                    <button
-                        key={f.key}
-                        type="button"
-                        onClick={f.clear}
-                        className="btn-3d btn-3d-white btn-3d-sm inline-flex max-w-full items-center gap-1 rounded-full py-1.5 pl-3 pr-2 text-xs font-bold"
-                    >
-                      <span className="truncate">{f.label}</span>
-                      <X size={14} strokeWidth={2.6} className="shrink-0 text-ink/40" />
-                    </button>
-                ))}
+                {activeFilters.map((f) => {
+                  const group = FILTER_GROUP[f.key];
+                  return (
+                      <button
+                          key={f.key}
+                          type="button"
+                          onClick={f.clear}
+                          aria-label={`${group ? `${t(group)}: ` : ""}${f.label} ✕`}
+                          className="btn-3d btn-3d-white btn-3d-sm inline-flex max-w-full items-center gap-1.5 rounded-full py-1 pl-3 pr-1 text-xs"
+                      >
+                        <span className="min-w-0 truncate">
+                          {group && <span className="font-semibold text-ink/45">{t(group)} · </span>}
+                          <span className="font-extrabold text-ink">{f.label}</span>
+                        </span>
+                        <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-forest text-white">
+                          <X size={12} strokeWidth={3} />
+                        </span>
+                      </button>
+                  );
+                })}
                 <button
                     type="button"
                     onClick={resetFilters}
-                    className="px-2 py-1.5 text-xs font-bold text-forest"
+                    className="btn-3d btn-3d-white btn-3d-sm inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold text-coral"
                 >
+                  <RotateCcw size={12} strokeWidth={2.8} />
                   {t("browse.reset")}
                 </button>
               </div>
