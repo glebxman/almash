@@ -56,7 +56,7 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
               <button
                 type="button"
                 onClick={() => setStep((s) => s + 1)}
-                className="flex min-h-11 flex-1 items-center justify-center rounded-full bg-forest py-3 text-sm font-extrabold text-white shadow-[0_5px_0_#6f63d6]"
+                className="flex min-h-11 flex-1 items-center justify-center rounded-full py-3 text-sm font-extrabold btn-3d btn-3d-violet"
               >
                 {t("onboarding.next")}
               </button>
@@ -64,7 +64,7 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
               <button
                 type="button"
                 onClick={finish}
-                className="flex min-h-11 flex-1 items-center justify-center rounded-full bg-sand py-3 text-sm font-extrabold text-ink shadow-[0_5px_0_#b8d63a]"
+                className="flex min-h-11 flex-1 items-center justify-center rounded-full py-3 text-sm font-extrabold btn-3d btn-3d-lime"
               >
                 {t("onboarding.start")}
               </button>
@@ -72,7 +72,7 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
             <Link
               to="/items/new"
               onClick={finish}
-              className="inline-flex min-h-11 items-center justify-center rounded-full bg-white px-4 py-3 text-sm font-bold text-ink"
+              className="btn-3d btn-3d-white inline-flex min-h-11 items-center justify-center rounded-full px-4 py-3 text-sm font-bold"
             >
               {t("onboarding.addToy")}
             </Link>

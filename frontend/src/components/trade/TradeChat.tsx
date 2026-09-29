@@ -378,7 +378,7 @@ export function TradeChat({
               type="submit"
               disabled={!canSend}
               aria-label={t("trade.send")}
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-forest text-white shadow-sm transition active:scale-90 disabled:bg-ink/10 disabled:text-ink/30"
+              className="btn-3d btn-3d-violet btn-3d-sm grid h-11 w-11 shrink-0 place-items-center rounded-full"
             >
               {sending ? <Loader2 size={20} className="animate-spin" /> : <SendHorizontal size={20} />}
             </button>

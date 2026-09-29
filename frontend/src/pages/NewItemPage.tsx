@@ -1,4 +1,5 @@
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState, type ReactNode } from "react";
+import { ChevronDown } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { api } from "@/lib/client";
 import { mediaUrl } from "@/lib/env";
@@ -12,7 +13,7 @@ import { useLabels } from "@/lib/labels";
 const ALL_SUBCATEGORIES = Object.values(CATEGORIES).flat();
 
 /** Validated fields, in the order they appear in the form. */
-const FIELD_ORDER = ["title", "description", "ageFrom", "ageTo", "city", "photos", "defectsConfirmed"] as const;
+const FIELD_ORDER = ["photos", "title", "description", "city", "ageFrom", "ageTo", "defectsConfirmed"] as const;
 type FieldKey = (typeof FIELD_ORDER)[number];
 type FieldErrors = Partial<Record<FieldKey, string>>;
 
@@ -48,6 +49,9 @@ export default function NewItemPage() {
   const [videoUrl, setVideoUrl] = useState("");
   const [videoUploading, setVideoUploading] = useState(false);
   const subcats = useMemo(() => CATEGORIES[category] || [], [category]);
+  // Optional parts of the form start collapsed to keep it short on phones.
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [wantMoreOpen, setWantMoreOpen] = useState(false);
 
   if (!loading && !user) {
     navigate("/login", { replace: true });
@@ -144,7 +148,9 @@ export default function NewItemPage() {
     setFieldErrors(errs);
     const names = FIELD_ORDER.filter((k) => errs[k]).map((k) => fieldNames[k]);
     setError(t("newItem.err.summary", { fields: names.join(", ") }));
-    revealFirst(errs);
+    // Age fields live in the collapsed "details" section: open it first.
+    if (errs.ageFrom || errs.ageTo) setDetailsOpen(true);
+    requestAnimationFrame(() => revealFirst(errs));
   }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -236,177 +242,6 @@ export default function NewItemPage() {
             onChange={(e) => clearFieldError((e.target as unknown as HTMLInputElement).name)}
             className="space-y-6 rounded-3xl bg-white p-5 shadow-sm ring-1 ring-forest/10 sm:p-8"
         >
-          {/* Основная информация */}
-          <div className="space-y-4">
-            <SectionTitle>{t("newItem.sectionMain")}</SectionTitle>
-            <Field label={t("newItem.name")} name="title" required error={fieldErrors.title} />
-            <label data-field="description" className="block space-y-1.5 text-sm">
-              <span className="font-medium text-ink/80">
-                {t("newItem.description")} <span className="text-coral">*</span>
-              </span>
-              <textarea
-                  name="description"
-                  rows={4}
-                  aria-invalid={Boolean(fieldErrors.description)}
-                  className={`w-full rounded-2xl border px-4 py-3 text-sm text-ink outline-none transition focus:bg-white focus:ring-2 ${
-                    fieldErrors.description ? INPUT_BAD : INPUT_OK
-                  }`}
-              />
-              <FieldError message={fieldErrors.description} />
-            </label>
-          </div>
-
-          {/* Категория */}
-          <div className="space-y-4">
-            <SectionTitle>{t("newItem.sectionCategory")}</SectionTitle>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="block space-y-1.5 text-sm">
-                <span className="font-medium text-ink/80">{t("newItem.category")}</span>
-                <FancySelect
-                    value={category}
-                    onChange={(v) => {
-                      setCategory(v);
-                      setSubcategory(CATEGORIES[v]?.[0] ?? "");
-                    }}
-                    options={Object.keys(CATEGORIES).map((c) => ({ value: c, label: labels.category(c) }))}
-                    triggerClassName={FIELD_TRIGGER}
-                />
-              </label>
-              <label className="block space-y-1.5 text-sm">
-                <span className="font-medium text-ink/80">{t("newItem.subcategory")}</span>
-                <FancySelect
-                    name="subcategory"
-                    value={subcategory}
-                    onChange={setSubcategory}
-                    options={subcats.map((sc) => ({ value: sc, label: labels.subcategory(sc) }))}
-                    triggerClassName={FIELD_TRIGGER}
-                />
-              </label>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label={t("newItem.brand")} name="brand" />
-              <Field label={t("newItem.model")} name="model" />
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label={t("newItem.ageFrom")} name="ageFrom" type="number" min={0} max={18} error={fieldErrors.ageFrom} />
-              <Field label={t("newItem.ageTo")} name="ageTo" type="number" min={0} max={18} error={fieldErrors.ageTo} />
-            </div>
-
-            <label className="block space-y-1.5 text-sm">
-              <span className="font-medium text-ink/80">{t("newItem.original")}</span>
-              <FancySelect
-                  name="isOriginal"
-                  value={isOriginal}
-                  onChange={setIsOriginal}
-                  options={[
-                    { value: "on", label: t("newItem.originalYes") },
-                    { value: "off", label: t("newItem.originalNo") },
-                  ]}
-                  triggerClassName={FIELD_TRIGGER}
-              />
-            </label>
-
-            <Field label={t("newItem.tags")} name="tags" placeholder={t("newItem.tagsPlaceholder")} />
-          </div>
-
-          {/* Состояние */}
-          <div className="space-y-4">
-            <SectionTitle>{t("newItem.sectionCondition")}</SectionTitle>
-            <label className="block space-y-1.5 text-sm">
-              <span className="font-medium text-ink/80">{t("newItem.condition")}</span>
-              <FancySelect
-                  name="condition"
-                  value={condition}
-                  onChange={setCondition}
-                  options={CONDITIONS.map((c) => ({ value: c, label: labels.condition(c) }))}
-                  triggerClassName={FIELD_TRIGGER}
-              />
-            </label>
-
-            <Field label={t("newItem.completeness")} name="completeness" />
-
-            <label className="flex items-center gap-2.5 rounded-2xl bg-cream/50 px-4 py-3 text-sm font-medium text-ink/80">
-              <input
-                  type="checkbox"
-                  name="hasDamage"
-                  className="h-4 w-4 rounded border-forest/30 text-coral focus:ring-coral/30"
-              />
-              {t("newItem.hasDamage")}
-            </label>
-            <Field label={t("newItem.damageNotes")} name="damageNotes" />
-            <Field label={t("newItem.missingParts")} name="missingParts" />
-          </div>
-
-          {/* Локация */}
-          <div className="space-y-4">
-            <SectionTitle>{t("newItem.sectionLocation")}</SectionTitle>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label={t("newItem.city")} name="city" defaultValue={user?.city} required error={fieldErrors.city} />
-              <Field label={t("newItem.district")} name="district" />
-            </div>
-          </div>
-
-          {/* Хочу получить */}
-          <div className="space-y-4">
-            <SectionTitle>{t("newItem.sectionWant")}</SectionTitle>
-            <label className="block space-y-1.5 text-sm">
-              <span className="font-medium text-ink/80">{t("newItem.wantType")}</span>
-              <FancySelect
-                  name="wantType"
-                  value={wantType}
-                  onChange={setWantType}
-                  options={[
-                    { value: "ANY", label: t("newItem.wantAny") },
-                    { value: "CATEGORY", label: t("newItem.wantCategory") },
-                    { value: "BRAND", label: t("newItem.wantBrand") },
-                    { value: "SPECIFIC", label: t("newItem.wantSpecific") },
-                  ]}
-                  triggerClassName={FIELD_TRIGGER}
-              />
-            </label>
-            <Field
-                label={t("newItem.wantText")}
-                name="wantText"
-                placeholder={t("newItem.wantTextPlaceholder")}
-            />
-            {/* Chips instead of free text: the backend matches these values
-                against subcategories, so they must stay exact (Russian) */}
-            <div className="space-y-1.5 text-sm">
-              <span className="font-medium text-ink/80">{t("newItem.wantCategories")}</span>
-              <div className="flex flex-wrap gap-1.5">
-                {ALL_SUBCATEGORIES.map((sc) => {
-                  const on = wantCats.includes(sc);
-                  return (
-                      <button
-                          key={sc}
-                          type="button"
-                          aria-pressed={on}
-                          onClick={() =>
-                              setWantCats((prev) =>
-                                  on ? prev.filter((x) => x !== sc) : [...prev, sc],
-                              )
-                          }
-                          className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                              on
-                                  ? "bg-forest text-white"
-                                  : "bg-cream/60 text-ink/70 ring-1 ring-forest/15 hover:bg-forest/10"
-                          }`}
-                      >
-                        {labels.subcategory(sc)}
-                      </button>
-                  );
-                })}
-              </div>
-            </div>
-            <Field
-                label={t("newItem.wantBrands")}
-                name="wantBrands"
-                placeholder="LEGO, Hot Wheels"
-            />
-          </div>
-
           {/* Фото */}
           <div className="space-y-3">
             <SectionTitle>{t("newItem.sectionPhotos")}</SectionTitle>
@@ -504,6 +339,186 @@ export default function NewItemPage() {
             </div>
           </div>
 
+          {/* Основная информация */}
+          <div className="space-y-4">
+            <SectionTitle>{t("newItem.sectionMain")}</SectionTitle>
+            <Field label={t("newItem.name")} name="title" required error={fieldErrors.title} />
+            <label data-field="description" className="block space-y-1.5 text-sm">
+              <span className="font-medium text-ink/80">
+                {t("newItem.description")} <span className="text-coral">*</span>
+              </span>
+              <textarea
+                  name="description"
+                  rows={4}
+                  aria-invalid={Boolean(fieldErrors.description)}
+                  className={`w-full rounded-2xl border px-4 py-3 text-sm text-ink outline-none transition focus:bg-white focus:ring-2 ${
+                    fieldErrors.description ? INPUT_BAD : INPUT_OK
+                  }`}
+              />
+              <FieldError message={fieldErrors.description} />
+            </label>
+          </div>
+
+          {/* Категория и состояние */}
+          <div className="space-y-4">
+            <SectionTitle>{t("newItem.sectionCategory")}</SectionTitle>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block space-y-1.5 text-sm">
+                <span className="font-medium text-ink/80">{t("newItem.category")}</span>
+                <FancySelect
+                    value={category}
+                    onChange={(v) => {
+                      setCategory(v);
+                      setSubcategory(CATEGORIES[v]?.[0] ?? "");
+                    }}
+                    options={Object.keys(CATEGORIES).map((c) => ({ value: c, label: labels.category(c) }))}
+                    triggerClassName={FIELD_TRIGGER}
+                />
+              </label>
+              <label className="block space-y-1.5 text-sm">
+                <span className="font-medium text-ink/80">{t("newItem.subcategory")}</span>
+                <FancySelect
+                    name="subcategory"
+                    value={subcategory}
+                    onChange={setSubcategory}
+                    options={subcats.map((sc) => ({ value: sc, label: labels.subcategory(sc) }))}
+                    triggerClassName={FIELD_TRIGGER}
+                />
+              </label>
+            </div>
+
+            <label className="block space-y-1.5 text-sm">
+              <span className="font-medium text-ink/80">{t("newItem.condition")}</span>
+              <FancySelect
+                  name="condition"
+                  value={condition}
+                  onChange={setCondition}
+                  options={CONDITIONS.map((c) => ({ value: c, label: labels.condition(c) }))}
+                  triggerClassName={FIELD_TRIGGER}
+              />
+            </label>
+
+          </div>
+
+          {/* Локация */}
+          <div className="space-y-4">
+            <SectionTitle>{t("newItem.sectionLocation")}</SectionTitle>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label={t("newItem.city")} name="city" defaultValue={user?.city} required error={fieldErrors.city} />
+              <Field label={t("newItem.district")} name="district" />
+            </div>
+          </div>
+
+          {/* Хочу получить */}
+          <div className="space-y-4">
+            <SectionTitle>{t("newItem.sectionWant")}</SectionTitle>
+            <label className="block space-y-1.5 text-sm">
+              <span className="font-medium text-ink/80">{t("newItem.wantType")}</span>
+              <FancySelect
+                  name="wantType"
+                  value={wantType}
+                  onChange={setWantType}
+                  options={[
+                    { value: "ANY", label: t("newItem.wantAny") },
+                    { value: "CATEGORY", label: t("newItem.wantCategory") },
+                    { value: "BRAND", label: t("newItem.wantBrand") },
+                    { value: "SPECIFIC", label: t("newItem.wantSpecific") },
+                  ]}
+                  triggerClassName={FIELD_TRIGGER}
+              />
+            </label>
+            <Field
+                label={t("newItem.wantText")}
+                name="wantText"
+                placeholder={t("newItem.wantTextPlaceholder")}
+            />
+            <MoreSection
+                open={wantMoreOpen}
+                onToggle={setWantMoreOpen}
+                title={t("newItem.moreWant")}
+                hint={t("newItem.moreWantHint")}
+            >
+            {/* Chips instead of free text: the backend matches these values
+                against subcategories, so they must stay exact (Russian) */}
+            <div className="space-y-1.5 text-sm">
+              <span className="font-medium text-ink/80">{t("newItem.wantCategories")}</span>
+              <div className="flex flex-wrap gap-x-1.5 gap-y-2.5 pb-1">
+                {ALL_SUBCATEGORIES.map((sc) => {
+                  const on = wantCats.includes(sc);
+                  return (
+                      <button
+                          key={sc}
+                          type="button"
+                          aria-pressed={on}
+                          onClick={() =>
+                              setWantCats((prev) =>
+                                  on ? prev.filter((x) => x !== sc) : [...prev, sc],
+                              )
+                          }
+                          className={`btn-3d btn-3d-sm rounded-full px-3 py-1.5 text-xs font-bold ${
+                              on ? "btn-3d-violet" : "btn-3d-white text-ink/70"
+                          }`}
+                      >
+                        {labels.subcategory(sc)}
+                      </button>
+                  );
+                })}
+              </div>
+            </div>
+            <Field
+                label={t("newItem.wantBrands")}
+                name="wantBrands"
+                placeholder="LEGO, Hot Wheels"
+            />
+            </MoreSection>
+          </div>
+
+          {/* Необязательные подробности */}
+          <MoreSection
+              open={detailsOpen}
+              onToggle={setDetailsOpen}
+              title={t("newItem.moreDetails")}
+              hint={t("newItem.moreDetailsHint")}
+          >
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label={t("newItem.brand")} name="brand" />
+              <Field label={t("newItem.model")} name="model" />
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label={t("newItem.ageFrom")} name="ageFrom" type="number" min={0} max={18} error={fieldErrors.ageFrom} />
+              <Field label={t("newItem.ageTo")} name="ageTo" type="number" min={0} max={18} error={fieldErrors.ageTo} />
+            </div>
+
+            <label className="block space-y-1.5 text-sm">
+              <span className="font-medium text-ink/80">{t("newItem.original")}</span>
+              <FancySelect
+                  name="isOriginal"
+                  value={isOriginal}
+                  onChange={setIsOriginal}
+                  options={[
+                    { value: "on", label: t("newItem.originalYes") },
+                    { value: "off", label: t("newItem.originalNo") },
+                  ]}
+                  triggerClassName={FIELD_TRIGGER}
+              />
+            </label>
+
+            <Field label={t("newItem.tags")} name="tags" placeholder={t("newItem.tagsPlaceholder")} />
+            <Field label={t("newItem.completeness")} name="completeness" />
+
+            <label className="flex items-center gap-2.5 rounded-2xl bg-cream/50 px-4 py-3 text-sm font-medium text-ink/80">
+              <input
+                  type="checkbox"
+                  name="hasDamage"
+                  className="h-5 w-5"
+              />
+              {t("newItem.hasDamage")}
+            </label>
+            <Field label={t("newItem.damageNotes")} name="damageNotes" />
+            <Field label={t("newItem.missingParts")} name="missingParts" />
+          </MoreSection>
+
           <div data-field="defectsConfirmed" className="space-y-1.5">
             <label
                 className={`flex items-start gap-3 rounded-2xl p-4 text-sm ${
@@ -513,7 +528,7 @@ export default function NewItemPage() {
               <input
                   type="checkbox"
                   name="defectsConfirmed"
-                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-forest/30 text-forest focus:ring-forest/30"
+                  className="h-5 w-5 shrink-0"
               />
               <span className="text-ink/75">
               {t("newItem.defectsConfirm")}
@@ -532,12 +547,51 @@ export default function NewItemPage() {
           <button
               type="submit"
               disabled={busy}
-              className="min-h-12 w-full rounded-2xl bg-coral py-3 font-semibold text-white shadow-sm transition hover:bg-coral/90 disabled:opacity-60"
+              className="btn-3d btn-3d-coral btn-3d-lg min-h-12 w-full rounded-2xl py-3 font-extrabold"
           >
             {busy ? t("newItem.publishing") : t("newItem.publish")}
           </button>
         </form>
       </div>
+  );
+}
+
+/**
+ * Collapsible block for optional fields. A native <details> keeps its inputs
+ * mounted while closed, so they are still part of the form's FormData.
+ */
+function MoreSection({
+  open,
+  onToggle,
+  title,
+  hint,
+  children,
+}: {
+  open: boolean;
+  onToggle: (open: boolean) => void;
+  title: string;
+  hint: string;
+  children: ReactNode;
+}) {
+  return (
+      <details
+          open={open}
+          onToggle={(e) => onToggle(e.currentTarget.open)}
+          className="group rounded-2xl bg-cream/50 ring-1 ring-forest/10"
+      >
+        <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-extrabold text-ink">{title}</span>
+            <span className="block truncate text-xs text-ink/45">{hint}</span>
+          </span>
+          <ChevronDown
+              size={18}
+              aria-hidden
+              className="shrink-0 text-ink/40 transition-transform group-open:rotate-180"
+          />
+        </summary>
+        <div className="space-y-4 border-t border-forest/10 px-4 pb-4 pt-3">{children}</div>
+      </details>
   );
 }
 

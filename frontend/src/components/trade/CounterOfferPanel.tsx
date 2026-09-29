@@ -117,7 +117,7 @@ export function CounterOfferPanel({
         type="button"
         disabled={busy}
         onClick={submit}
-        className="rounded-xl bg-forest px-4 py-2 text-sm font-medium text-cream disabled:opacity-60"
+        className="btn-3d btn-3d-violet btn-3d-sm min-h-11 rounded-xl px-4 py-2 text-sm font-bold"
       >
         {busy ? t("counter.saving") : t("counter.submit")}
       </button>

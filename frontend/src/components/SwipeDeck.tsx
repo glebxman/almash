@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Heart, RotateCcw, X } from "lucide-react";
+import { Heart, Loader2, RotateCcw, X } from "lucide-react";
 import clsx from "clsx";
 import { api } from "@/lib/client";
 import { mediaUrl } from "@/lib/env";
@@ -227,7 +227,9 @@ export function SwipeDeck() {
   if (authLoading || !user) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-2 text-ink/50">
-        <ToyMascot className="w-28 animate-softpulse" mood="idle" />
+        <span className="mb-1.5 grid h-14 w-14 place-items-center rounded-[1.25rem] bg-forest text-white bg-[linear-gradient(180deg,rgba(255,255,255,0.28),rgba(255,255,255,0)_60%)] shadow-[0_4px_0_#6a5ce0,0_12px_20px_-8px_rgba(23,21,31,0.28),inset_0_1.5px_0_rgba(255,255,255,0.45)]">
+          <Loader2 size={24} strokeWidth={2.6} className="animate-spin" />
+        </span>
         {t("pages.loading")}
       </div>
     );
@@ -251,11 +253,11 @@ export function SwipeDeck() {
         <ToyMascot className="w-16 shrink-0 sm:w-20" mood={exit === "right" ? "yay" : "idle"} />
       </header>
 
-      <div className="flex gap-2">
-        <span className="rounded-full bg-coral px-3 py-1 text-xs font-extrabold text-white">
+      <div className="flex gap-2 pb-1">
+        <span className="btn-3d btn-3d-coral btn-3d-sm pointer-events-none rounded-full px-3 py-1 text-xs font-extrabold">
           {t("swipe.skipHint")}
         </span>
-        <span className="rounded-full bg-sand px-3 py-1 text-xs font-extrabold text-ink">
+        <span className="btn-3d btn-3d-lime btn-3d-sm pointer-events-none rounded-full px-3 py-1 text-xs font-extrabold">
           {t("swipe.tradeHint")}
         </span>
       </div>
@@ -290,12 +292,14 @@ export function SwipeDeck() {
       <div className="relative mx-auto aspect-[3/4] w-full max-h-[min(62vh,540px)]">
         {loading ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 rounded-[2rem] bg-white text-ink/45 shadow-[0_16px_40px_rgba(23,21,31,0.08)]">
-            <ToyMascot className="w-24 animate-softpulse" />
+            <span className="mb-1.5 grid h-14 w-14 place-items-center rounded-[1.25rem] bg-forest text-white bg-[linear-gradient(180deg,rgba(255,255,255,0.28),rgba(255,255,255,0)_60%)] shadow-[0_4px_0_#6a5ce0,0_12px_20px_-8px_rgba(23,21,31,0.28),inset_0_1.5px_0_rgba(255,255,255,0.45)]">
+              <Loader2 size={24} strokeWidth={2.6} className="animate-spin" />
+            </span>
             {t("swipe.building")}
           </div>
         ) : cards.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center gap-2 rounded-[2rem] bg-mist px-6 text-center shadow-[0_16px_40px_rgba(23,21,31,0.08)]">
-            <ToyMascot className="w-28" mood="sad" />
+          <div className="flex h-full flex-col items-center justify-center gap-2 rounded-[2rem] bg-[linear-gradient(160deg,#F5F2FF_0%,#ECE7FF_55%,#F4FADF_100%)] px-6 text-center shadow-[0_16px_40px_rgba(23,21,31,0.08)] ring-1 ring-forest/10">
+            <ToyMascot className="w-28" reverse />
             <p className="font-display text-3xl text-ink">{t("swipe.emptyTitle")}</p>
             <p className="text-sm font-semibold text-ink/55">
               {t("swipe.emptyText")}
@@ -304,13 +308,13 @@ export function SwipeDeck() {
               <button
                 type="button"
                 onClick={() => load()}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-ink px-5 text-sm font-bold text-cream"
+                className="btn-3d btn-3d-ink inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-bold"
               >
                 <RotateCcw size={16} /> {t("swipe.refresh")}
               </button>
               <Link
                 to="/browse"
-                className="inline-flex min-h-11 items-center justify-center rounded-full bg-white px-5 text-sm font-bold text-ink"
+                className="btn-3d btn-3d-white inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-bold"
               >
                 {t("swipe.catalog")}
               </Link>
@@ -453,8 +457,8 @@ export function SwipeDeck() {
             aria-label={t("swipe.skip")}
             onClick={() => top && commit("PASS", top)}
             className={clsx(
-              "flex h-16 w-16 items-center justify-center rounded-full bg-coral text-white shadow-[0_8px_0_#c44a3a] transition active:translate-y-1 active:shadow-none disabled:opacity-50",
-              passOpacity > 0.4 && "scale-110",
+              "btn-3d btn-3d-coral btn-3d-lg flex h-16 w-16 items-center justify-center rounded-full",
+              passOpacity > 0.4 && "[scale:1.1]",
             )}
           >
             <X size={30} strokeWidth={2.8} />
@@ -465,8 +469,8 @@ export function SwipeDeck() {
             aria-label={t("swipe.like")}
             onClick={() => top && commit("LIKE", top)}
             className={clsx(
-              "flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-sand text-ink shadow-[0_8px_0_#b8d63a] transition active:translate-y-1 active:shadow-none disabled:opacity-50",
-              likeOpacity > 0.4 && "scale-110 animate-pop",
+              "btn-3d btn-3d-lime btn-3d-lg flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full",
+              likeOpacity > 0.4 && "[scale:1.1]",
               !canLike && "opacity-60",
             )}
           >
@@ -504,7 +508,7 @@ export function SwipeDeck() {
                 type="button"
                 disabled={busy}
                 onClick={() => startTrade()}
-                className="inline-flex min-h-12 items-center justify-center rounded-full bg-forest px-4 font-extrabold text-white shadow-[0_6px_0_#6f63d6]"
+                className="btn-3d btn-3d-violet inline-flex min-h-12 items-center justify-center rounded-full px-4 font-extrabold"
               >
                 {t("swipe.start")}
               </button>

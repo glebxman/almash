@@ -264,7 +264,7 @@ export default function ItemPage() {
           <button
             type="button"
             onClick={toggleFav}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm ring-1 ring-forest/15"
+            className="btn-3d btn-3d-white inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold"
           >
             <Heart
               size={16}
@@ -279,7 +279,7 @@ export default function ItemPage() {
                 if (!user) return navigate("/login");
                 setOfferOpen(true);
               }}
-              className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-coral px-4 py-3 text-sm font-semibold text-white"
+              className="btn-3d btn-3d-coral inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold"
             >
               <RefreshCw size={16} />
               {t("itemPage.offer")}
@@ -311,7 +311,7 @@ export default function ItemPage() {
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="offer-title"
-                className="flex max-h-full w-full animate-bouncein flex-col overflow-hidden rounded-t-[1.75rem] bg-white shadow-2xl sm:max-h-[88dvh] sm:max-w-lg sm:rounded-[1.75rem]"
+                className="flex max-h-[calc(100dvh-var(--app-inset-top)-0.5rem)] w-full animate-bouncein flex-col overflow-hidden rounded-t-[1.75rem] bg-white shadow-2xl sm:max-h-[88dvh] sm:max-w-lg sm:rounded-[1.75rem]"
               >
                 {/* Header: what the offer is for */}
                 <div className="flex shrink-0 items-center gap-3 border-b border-ink/[0.06] px-4 py-3">
@@ -348,7 +348,7 @@ export default function ItemPage() {
                   </div>
 
                   {mySets.length > 0 && (
-                    <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-2 pt-0.5 scrollbar-none">
                       <span className="shrink-0 text-xs font-semibold text-ink/50">{t("itemPage.pickSet")}</span>
                       {mySets.map((s) => {
                         const setIds = s.items.map((i) => i.item.id);
@@ -364,8 +364,8 @@ export default function ItemPage() {
                                   : [...new Set([...prev, ...setIds])],
                               )
                             }
-                            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition active:scale-95 ${
-                              allIn ? "bg-forest text-white" : "bg-forest/10 text-forest hover:bg-forest/20"
+                            className={`btn-3d btn-3d-sm shrink-0 rounded-full px-3 py-1.5 text-xs font-bold ${
+                              allIn ? "btn-3d-violet" : "btn-3d-white text-forest"
                             }`}
                           >
                             📦 {s.title}
@@ -384,14 +384,15 @@ export default function ItemPage() {
                       <p className="text-sm font-semibold text-ink/55">{t("profile.sets.noItems")}</p>
                       <Link
                         to="/items/new"
-                        className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-forest px-4 text-sm font-bold text-white"
+                        className="btn-3d btn-3d-violet btn-3d-sm inline-flex min-h-10 items-center gap-1.5 rounded-full px-4 text-sm font-bold"
                       >
                         <Plus size={16} />
                         {t("nav.add")}
                       </Link>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 gap-2 p-0.5 sm:grid-cols-3">
+                    // Compact rows (small thumbnail) so the list stays short and the send button in view.
+                    <div className="grid grid-cols-1 gap-1.5 p-0.5 sm:grid-cols-2">
                       {myItems.map((mi) => {
                         const on = selected.includes(mi.id);
                         return (
@@ -403,32 +404,30 @@ export default function ItemPage() {
                               setError("");
                               setSelected((s) => (on ? s.filter((x) => x !== mi.id) : [...s, mi.id]));
                             }}
-                            className={`overflow-hidden rounded-2xl bg-white text-left shadow-sm transition active:scale-[0.97] ${
-                              on ? "ring-[3px] ring-forest" : "ring-1 ring-forest/10 hover:ring-forest/30"
+                            className={`nav-3d flex items-center gap-3 rounded-2xl p-2 text-left transition active:scale-[0.99] ${
+                              on ? "bg-forest/[0.07] ring-2 ring-forest" : "bg-white ring-1 ring-forest/10 hover:ring-forest/30"
                             }`}
                           >
-                            <div className="relative aspect-square w-full overflow-hidden bg-cream">
-                              <img
-                                src={mediaUrl(mi.media?.[0]?.url) || "https://placehold.co/300x300"}
-                                alt=""
-                                loading="lazy"
-                                className="absolute inset-0 h-full w-full object-cover"
-                              />
-                              <span
-                                className={`absolute right-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-full text-white shadow transition ${
-                                  on ? "bg-forest" : "bg-white/80 ring-1 ring-ink/10"
-                                }`}
-                              >
-                                {on && <Check size={14} strokeWidth={3} />}
-                              </span>
-                            </div>
-                            <p
-                              className={`line-clamp-2 px-2 py-1.5 text-xs font-bold leading-snug ${
+                            <img
+                              src={mediaUrl(mi.media?.[0]?.url) || "https://placehold.co/112x112"}
+                              alt=""
+                              loading="lazy"
+                              className="h-14 w-14 shrink-0 rounded-xl bg-cream object-cover"
+                            />
+                            <span
+                              className={`min-w-0 flex-1 line-clamp-2 text-sm font-bold leading-snug ${
                                 on ? "text-forest" : "text-ink"
                               }`}
                             >
                               {mi.title}
-                            </p>
+                            </span>
+                            <span
+                              className={`btn-3d btn-3d-sm pointer-events-none grid h-7 w-7 shrink-0 place-items-center rounded-full ${
+                                on ? "btn-3d-violet" : "btn-3d-white"
+                              }`}
+                            >
+                              {on && <Check size={15} strokeWidth={3} />}
+                            </span>
                           </button>
                         );
                       })}
@@ -450,7 +449,7 @@ export default function ItemPage() {
                     type="button"
                     disabled={busy || selected.length === 0}
                     onClick={sendOffer}
-                    className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-coral text-sm font-extrabold text-white shadow-sm transition active:scale-[0.98] disabled:bg-ink/10 disabled:text-ink/35 disabled:shadow-none"
+                    className="btn-3d btn-3d-coral inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl text-sm font-extrabold"
                   >
                     {busy ? <Loader2 size={17} className="animate-spin" /> : <RefreshCw size={17} />}
                     {busy

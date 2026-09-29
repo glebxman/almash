@@ -67,6 +67,19 @@ export async function POST(req: AppRequest, ctx: Ctx) {
         if (!["OFFER_SENT", "NEGOTIATION"].includes(trade.status)) {
           return jsonError("Нельзя принять в текущем статусе", 400);
         }
+        // Accepting confirms the terms for the recipient. The initiator already
+        // agreed if the current composition is theirs; after the recipient's
+        // own counter-offer the initiator still has to confirm it.
+        const latest = await prisma.tradeVersion.findFirst({
+          where: { tradeId: trade.id, version: trade.currentVersion },
+          select: { createdById: true },
+        });
+        const agreedIds = [user.id];
+        if (!latest || latest.createdById === trade.initiatorId) agreedIds.push(trade.initiatorId);
+        await prisma.tradeParty.updateMany({
+          where: { tradeId: trade.id, userId: { in: agreedIds } },
+          data: { confirmedTerms: true, viewedItemsAck: true },
+        });
         await prisma.trade.update({
           where: { id: trade.id },
           data: { status: "NEGOTIATION" },
@@ -75,7 +88,7 @@ export async function POST(req: AppRequest, ctx: Ctx) {
           data: {
             tradeId: trade.id,
             senderId: user.id,
-            body: "Предложение принято. Согласуйте финальный состав и условия.",
+            body: "Предложение принято.",
             system: true,
           },
         });
@@ -91,6 +104,8 @@ export async function POST(req: AppRequest, ctx: Ctx) {
           title: "Предложение принято",
           body: `${user.name} принял предложение ${trade.publicId}`,
         });
+        // Straight to handoff: no separate meeting step, the QR opens now.
+        await lockTermsIfAgreed(trade, user.id);
         break;
       }
 
@@ -144,54 +159,7 @@ export async function POST(req: AppRequest, ctx: Ctx) {
           meta: { side: myParty!.side },
         });
 
-        const parties = await prisma.tradeParty.findMany({
-          where: { tradeId: trade.id },
-        });
-        if (parties.every((p) => p.confirmedTerms)) {
-          const currentItems = await prisma.tradeItem.findMany({
-            where: { tradeId: trade.id, version: trade.currentVersion },
-            include: { item: { include: { media: true } } },
-          });
-          for (const ti of currentItems) {
-            const snap = itemSnapshot(ti.item);
-            await prisma.tradeItem.update({
-              where: { id: ti.id },
-              data: { itemSnapshot: snap },
-            });
-            await prisma.item.update({
-              where: { id: ti.itemId },
-              data: { snapshotJson: snap },
-            });
-          }
-
-          await prisma.trade.update({
-            where: { id: trade.id },
-            data: { status: "TERMS_AGREED", termsLockedAt: new Date() },
-          });
-          await prisma.message.create({
-            data: {
-              tradeId: trade.id,
-              senderId: user.id,
-              body: "Условия сделки зафиксированы обеими сторонами. Состав и фото заблокированы.",
-              system: true,
-            },
-          });
-          await writeAudit({
-            userId: user.id,
-            tradeId: trade.id,
-            action: "TERMS_LOCKED",
-          });
-          // TZ §50 «сделка подтверждена»
-          for (const uid of [trade.initiatorId, trade.recipientId]) {
-            await notify({
-              userId: uid,
-              tradeId: trade.id,
-              type: "TERMS_AGREED",
-              title: "Сделка подтверждена",
-              body: `${trade.publicId}: условия зафиксированы обеими сторонами. Договоритесь о встрече.`,
-            });
-          }
-        }
+        await lockTermsIfAgreed(trade, user.id);
         break;
       }
 
@@ -241,8 +209,8 @@ export async function POST(req: AppRequest, ctx: Ctx) {
       }
 
       case "start_handoff": {
-        if (!["MEETING_SCHEDULED", "HANDOFF_PENDING"].includes(trade.status)) {
-          return jsonError("Сначала назначьте встречу", 400);
+        if (!["TERMS_AGREED", "MEETING_SCHEDULED", "HANDOFF_PENDING"].includes(trade.status)) {
+          return jsonError("Сначала согласуйте условия", 400);
         }
         await prisma.trade.update({
           where: { id: trade.id },
@@ -326,4 +294,62 @@ export async function POST(req: AppRequest, ctx: Ctx) {
     if (e instanceof TradeError) return jsonError(e.message, e.status);
     return handleApiError(e);
   }
+}
+
+/**
+ * Once every party has confirmed the terms: freeze item snapshots (the
+ * evidence for disputes) and move the trade to TERMS_AGREED, where the
+ * QR/code handoff opens right away.
+ */
+async function lockTermsIfAgreed(
+  trade: { id: string; publicId: string; currentVersion: number; initiatorId: string; recipientId: string },
+  userId: string,
+) {
+  const parties = await prisma.tradeParty.findMany({ where: { tradeId: trade.id } });
+  if (!parties.every((p) => p.confirmedTerms)) return false;
+
+  const currentItems = await prisma.tradeItem.findMany({
+    where: { tradeId: trade.id, version: trade.currentVersion },
+    include: { item: { include: { media: true } } },
+  });
+  for (const ti of currentItems) {
+    const snap = itemSnapshot(ti.item);
+    await prisma.tradeItem.update({
+      where: { id: ti.id },
+      data: { itemSnapshot: snap },
+    });
+    await prisma.item.update({
+      where: { id: ti.itemId },
+      data: { snapshotJson: snap },
+    });
+  }
+
+  await prisma.trade.update({
+    where: { id: trade.id },
+    data: { status: "TERMS_AGREED", termsLockedAt: new Date() },
+  });
+  await prisma.message.create({
+    data: {
+      tradeId: trade.id,
+      senderId: userId,
+      body: "Условия сделки зафиксированы обеими сторонами. Состав и фото заблокированы. Договоритесь о встрече в чате и подтвердите передачу по QR-коду.",
+      system: true,
+    },
+  });
+  await writeAudit({
+    userId,
+    tradeId: trade.id,
+    action: "TERMS_LOCKED",
+  });
+  // TZ §50 «сделка подтверждена»
+  for (const uid of [trade.initiatorId, trade.recipientId]) {
+    await notify({
+      userId: uid,
+      tradeId: trade.id,
+      type: "TERMS_AGREED",
+      title: "Сделка подтверждена",
+      body: `${trade.publicId}: условия зафиксированы. Договоритесь в чате и подтвердите передачу по QR-коду.`,
+    });
+  }
+  return true;
 }

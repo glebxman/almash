@@ -239,7 +239,7 @@ export function QrScannerModal({ isOpen, onClose, onScan }: Props) {
                               setError("");
                               setAttempt((n) => n + 1);
                             }}
-                            className="rounded-xl bg-coral px-4 py-2 text-xs font-bold text-white active:scale-95"
+                            className="btn-3d btn-3d-coral btn-3d-sm rounded-xl px-4 py-2 text-xs font-bold"
                         >
                           {t("qr.retry")}
                         </button>
@@ -269,7 +269,7 @@ export function QrScannerModal({ isOpen, onClose, onScan }: Props) {
             <button
                 type="button"
                 onClick={onClose}
-                className="mt-4 min-h-12 w-full rounded-2xl bg-mist py-3 text-sm font-bold text-ink transition hover:bg-mist/70 active:scale-[0.98]"
+                className="btn-3d btn-3d-soft mt-4 min-h-12 w-full rounded-2xl py-3 text-sm font-bold"
             >
               {t("qr.cancel")}
             </button>

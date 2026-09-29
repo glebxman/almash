@@ -3,20 +3,15 @@ import { useAuth } from "@/components/AuthProvider";
 import { api } from "@/lib/client";
 import { mediaUrl } from "@/lib/env";
 import { isVideoUrl, uploadMedia, VIDEO_ACCEPT } from "@/lib/media";
-import {
-  DISPUTE_REASONS,
-  REVIEW_TAGS,
-  SAFE_MEETING_PLACES,
-} from "@/lib/constants";
+import { DISPUTE_REASONS, REVIEW_TAGS } from "@/lib/constants";
 import { CounterOfferPanel } from "@/components/trade/CounterOfferPanel";
 import { SnapshotTimeline } from "@/components/trade/SnapshotTimeline";
 import { QrScannerModal } from "@/components/trade/QrScannerModal";
 import { TradeChat, type ChatMsg } from "@/components/trade/TradeChat";
-import { DateTimePicker, defaultMeetingValue } from "@/components/DateTimePicker";
 import { FancySelect } from "@/components/FancySelect";
 import { ReportButton } from "@/components/ReportButton";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Camera, Check, QrCode, Star } from "lucide-react";
+import { ArrowLeft, Camera, Check, Star } from "lucide-react";
 import QRCode from "qrcode";
 import type {ItemCardData} from "@/components/ItemCard.tsx";
 import { useTranslation } from "react-i18next";
@@ -81,9 +76,8 @@ export default function TradeDetailPage() {
   }, [trade?.publicId, ownCode, qrByCode]);
   const [error, setError] = useState("");
   const [code, setCode] = useState("");
-  const [meetingAt, setMeetingAt] = useState(() => defaultMeetingValue());
-  const [meetingPlace, setMeetingPlace] = useState(SAFE_MEETING_PLACES[0]);
   const [reviewRating, setReviewRating] = useState(5);
+  const [hoverRating, setHoverRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
   const [reviewTags, setReviewTags] = useState<string[]>([]);
   const [disputeReason, setDisputeReason] = useState(DISPUTE_REASONS[0]);
@@ -150,7 +144,9 @@ export default function TradeDetailPage() {
   const myParty = trade.parties.find((p) => p.userId === user.id);
   const isRecipient = trade.recipientId === user.id;
   const myCode = trade.mySide === "A" ? trade.confirmCodeA : trade.confirmCodeB;
+  // No separate meeting step: once terms are agreed the parties can hand off.
   const canHandoff = [
+    "TERMS_AGREED",
     "MEETING_SCHEDULED",
     "HANDOFF_PENDING",
     "PARTY_A_CONFIRMED",
@@ -159,18 +155,9 @@ export default function TradeDetailPage() {
   const hasMyReview = trade.reviews.some((r) => r.authorId === user.id);
   const qrDataUrl = canHandoff ? qrByCode[`${trade.publicId}:${myCode}`] : undefined;
 
-  function StatusPill({ label, confirmed }: { label: string; confirmed: boolean }) {
-    return (
-        <span
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold ${
-                confirmed ? "bg-sand text-ink" : "bg-white/10 text-cream/50"
-            }`}
-        >
-      {label}
-          {confirmed ? <Check size={11} /> : <span>…</span>}
-    </span>
-    );
-  }
+  const myConfirmed = Boolean(
+    trade.mySide === "A" ? trade.partyAConfirmedAt : trade.mySide === "B" ? trade.partyBConfirmedAt : null,
+  );
 
   return (
     <div className="space-y-4 animate-rise sm:space-y-6">
@@ -194,7 +181,11 @@ export default function TradeDetailPage() {
                 : trade.initiatorId
             }
           />
-          <Link to="/trades" className="text-sm text-forest underline">
+          <Link
+            to="/trades"
+            className="btn-3d btn-3d-white btn-3d-sm inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-xs font-bold text-forest"
+          >
+            <ArrowLeft size={14} strokeWidth={2.6} />
             {t("trade.back")}
           </Link>
         </div>
@@ -221,15 +212,17 @@ export default function TradeDetailPage() {
 
       {/* Actions */}
       <section className="stack-actions">
-        {isRecipient && ["OFFER_SENT", "NEGOTIATION"].includes(trade.status) && (
+        {/* Accept locks the terms and opens the QR handoff right away. */}
+        {isRecipient && ["OFFER_SENT", "NEGOTIATION"].includes(trade.status) && !myParty?.confirmedTerms && (
           <>
             <Btn onClick={() => act({ action: "accept" })}>{t("trade.accept")}</Btn>
-            <Btn tone="muted" onClick={() => act({ action: "reject", reason: t("trade.rejectReason") })}>
+            <Btn tone="danger" onClick={() => act({ action: "reject", reason: t("trade.rejectReason") })}>
               {t("trade.reject")}
             </Btn>
           </>
         )}
-        {["OFFER_SENT", "NEGOTIATION"].includes(trade.status) && myParty && !myParty.confirmedTerms && (
+        {/* Only needed when the recipient changed the composition: the initiator must agree to it. */}
+        {trade.status === "NEGOTIATION" && !isRecipient && myParty && !myParty.confirmedTerms && (
           <Btn
             onClick={() =>
               act({ action: "confirm_terms", viewedItemsAck: true })
@@ -246,38 +239,6 @@ export default function TradeDetailPage() {
               .join(" · ")}
           </p>
         )}
-        {trade.status === "TERMS_AGREED" && (
-          <div className="w-full space-y-2 rounded-2xl bg-mist/40 p-4">
-            <p className="text-sm font-medium">{t("trade.scheduleTitle")}</p>
-            <DateTimePicker value={meetingAt} onChange={setMeetingAt} />
-            <FancySelect
-              value={meetingPlace}
-              onChange={setMeetingPlace}
-              options={SAFE_MEETING_PLACES.map((p) => ({ value: p, label: labels.place(p) }))}
-              triggerClassName={"border-forest/15 bg-white hover:border-forest/30 focus:ring-forest/30"}
-            />
-            <Btn
-                onClick={() => {
-                  if (!meetingAt) {
-                    setError(t("trade.pickDateTime"));
-                    return;
-                  }
-                  const parsed = new Date(meetingAt);
-                  if (isNaN(parsed.getTime())) {
-                    setError(t("trade.badDate"));
-                    return;
-                  }
-                  act({
-                    action: "schedule_meeting",
-                    meetingAt: parsed.toISOString(),
-                    meetingPlace,
-                  });
-                }}
-            >
-              {t("trade.saveMeeting")}
-            </Btn>
-          </div>
-        )}
         {trade.meetingAt && (
           <p className="w-full rounded-xl bg-forest/5 px-3 py-2 text-sm">
             {t("trade.meeting", {
@@ -286,7 +247,7 @@ export default function TradeDetailPage() {
             })}
           </p>
         )}
-        {trade.status === "MEETING_SCHEDULED" && (
+        {["TERMS_AGREED", "MEETING_SCHEDULED"].includes(trade.status) && (
           <Btn onClick={() => act({ action: "start_handoff" })}>
             {t("trade.startHandoff")}
           </Btn>
@@ -298,7 +259,7 @@ export default function TradeDetailPage() {
         )}
         {!["COMPLETED", "CANCELLED", "BLOCKED"].includes(trade.status) && (
           <Btn
-            tone="muted"
+            tone="danger"
             onClick={() =>
               act({ action: "cancel", reason: t("trade.cancelReason") })
             }
@@ -331,77 +292,122 @@ export default function TradeDetailPage() {
 
       {/* QR / code confirmation */}
       {canHandoff && (
-          <section className="space-y-5 rounded-[2rem] bg-forest p-5 text-cream shadow-[0_20px_60px_-15px_rgba(15,61,49,0.5)] sm:p-8">
+          <section className="space-y-5 rounded-[2rem] bg-forest p-5 text-cream shadow-[0_20px_60px_-15px_rgba(106,92,224,0.5)] sm:p-8">
             <div>
-              <h2 className="font-display text-xl sm:text-2xl">{t("trade.handoffTitle")}</h2>
-              <p className="mt-1 text-sm text-cream/60">
-                {t("trade.handoffHint")}
-              </p>
+              <h2 className="font-display text-2xl">{t("trade.handoffTitle")}</h2>
+              <p className="mt-1 text-sm text-cream/70">{t("trade.handoffHint")}</p>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              {/* Ваш код / QR */}
-              <div className="flex flex-col items-center rounded-3xl bg-white/[0.07] p-6 text-center backdrop-blur-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-cream/45">
-                  {t("trade.yourCode")}
-                </p>
-                <p className="mt-3 font-display text-5xl font-bold tracking-[0.2em] text-cream sm:text-6xl">
-                  {myCode}
-                </p>
+            {/* How it works, in three short steps */}
+            <ol className="grid gap-2 sm:grid-cols-3">
+              {[t("trade.handoffStep1"), t("trade.handoffStep2"), t("trade.handoffStep3")].map((step, i) => (
+                  <li key={i} className="flex items-center gap-2.5 rounded-2xl bg-white/10 px-3 py-2.5 text-sm font-semibold">
+                    <span className="btn-3d btn-3d-lime btn-3d-sm pointer-events-none grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-black">
+                      {i + 1}
+                    </span>
+                    {step}
+                  </li>
+              ))}
+            </ol>
 
-                {qrDataUrl && (
-                    <div className="mt-6 w-full max-w-[200px] rounded-3xl bg-white p-4 shadow-xl">
-                      <img
-                          src={qrDataUrl}
-                          alt={t("trade.qrAlt")}
-                          className="mx-auto h-36 w-36 sm:h-40 sm:w-40"
-                      />
-                      <p className="mt-3 flex items-center justify-center gap-1 text-[11px] font-medium text-ink/50">
-                        <QrCode size={12} />
-                        {t("trade.qrCaption", { id: trade.publicId })}
-                      </p>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {/* My QR: the other person scans it */}
+              {myCode && (
+                  <div className="card-3d flex flex-col items-center rounded-3xl p-5 text-center text-ink">
+                    <p className="text-sm font-extrabold">{t("trade.myQrTitle")}</p>
+                    <p className="text-xs font-semibold text-ink/50">{t("trade.myQrHint")}</p>
+                    <div className="mt-3 grid aspect-square w-full max-w-[12rem] place-items-center rounded-2xl bg-white p-2 ring-1 ring-forest/10">
+                      {qrDataUrl ? (
+                          <img src={qrDataUrl} alt={t("trade.qrAlt")} className="h-full w-full" />
+                      ) : (
+                          <span className="text-xs text-ink/40">{t("pages.loading")}</span>
+                      )}
                     </div>
+                    <p className="mt-3 text-[11px] font-bold uppercase tracking-wide text-ink/40">
+                      {t("trade.orTellCode")}
+                    </p>
+                    <p className="max-w-full break-all font-display text-3xl tracking-[0.2em] text-forest sm:text-4xl">{myCode}</p>
+                  </div>
+              )}
+
+              {/* Confirm receipt: scan their QR (main way) or type their code */}
+              <div className="flex flex-col gap-3 rounded-3xl bg-white/10 p-5">
+                {myConfirmed ? (
+                    <div className="flex flex-1 flex-col items-center justify-center gap-2 py-6 text-center">
+                      <span className="btn-3d btn-3d-lime pointer-events-none grid h-12 w-12 place-items-center rounded-full">
+                        <Check size={24} strokeWidth={3} />
+                      </span>
+                      <p className="font-extrabold">{t("trade.youConfirmed")}</p>
+                      <p className="text-sm text-cream/70">{t("trade.waitingPeer")}</p>
+                    </div>
+                ) : (
+                    <>
+                      <p className="text-sm font-extrabold">{t("trade.confirmTitle")}</p>
+                      <button
+                          type="button"
+                          onClick={() => setScannerOpen(true)}
+                          className="btn-3d btn-3d-lime btn-3d-lg flex min-h-14 items-center justify-center gap-2 rounded-2xl px-4 text-sm font-extrabold sm:text-base"
+                      >
+                        <Camera size={20} strokeWidth={2.4} />
+                        {t("trade.scan")}
+                      </button>
+
+                      <div className="flex items-center gap-3 text-[11px] font-bold uppercase tracking-wide text-cream/50">
+                        <span className="h-px flex-1 bg-white/15" />
+                        {t("trade.orEnterCode")}
+                        <span className="h-px flex-1 bg-white/15" />
+                      </div>
+
+                      <div className="flex flex-col gap-2.5 pb-1">
+                        <input
+                            value={code}
+                            onChange={(e) => setCode(e.target.value)}
+                            placeholder={t("trade.codePlaceholder")}
+                            inputMode="numeric"
+                            autoComplete="one-time-code"
+                            className="w-full rounded-2xl border-0 bg-white px-4 py-3 text-center font-display text-xl tracking-[0.25em] text-ink outline-none placeholder:font-sans placeholder:text-sm placeholder:tracking-normal placeholder:text-ink/30 focus:ring-2 focus:ring-sand"
+                        />
+                        <button
+                            type="button"
+                            disabled={!code.trim()}
+                            onClick={() => act({ action: "confirm_handoff", code })}
+                            className="btn-3d btn-3d-white min-h-12 w-full rounded-2xl px-4 text-sm font-extrabold text-forest"
+                        >
+                          {t("trade.confirmCode")}
+                        </button>
+                      </div>
+                      <p className="text-xs text-cream/60">{t("trade.received")}</p>
+                    </>
                 )}
               </div>
+            </div>
 
-              {/* Подтверждение */}
-              <div className="flex flex-col gap-3 rounded-3xl bg-white/[0.07] p-6 backdrop-blur-sm">
-                <p className="text-sm font-medium text-cream/85">
-                  {t("trade.enterCode")}
-                </p>
-
-                <input
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    placeholder={t("trade.codePlaceholder")}
-                    inputMode="numeric"
-                    className="w-full rounded-2xl border-0 bg-white px-4 py-3.5 text-center font-display text-2xl tracking-[0.3em] text-ink outline-none ring-0 placeholder:font-sans placeholder:text-sm placeholder:tracking-normal placeholder:text-ink/30 focus:ring-2 focus:ring-sand"
-                />
-
-                <button
-                    type="button"
-                    onClick={() => act({ action: "confirm_handoff", code })}
-                    className="flex items-center justify-center gap-2 rounded-2xl bg-coral py-3.5 text-sm font-semibold text-white shadow-lg shadow-coral/25 transition hover:bg-coral/90 active:scale-[0.98]"
-                >
-                  <Check size={16} />
-                  {t("trade.received")}
-                </button>
-
-                <button
-                    type="button"
-                    onClick={() => setScannerOpen(true)}
-                    className="flex items-center justify-center gap-1.5 rounded-2xl bg-white/10 py-3 text-xs font-semibold text-cream transition hover:bg-white/15 active:scale-[0.98]"
-                >
-                  <Camera size={15} />
-                  {t("trade.scan")}
-                </button>
-
-                <div className="mt-1 flex items-center justify-center gap-3 border-t border-white/10 pt-3">
-                  <StatusPill label="A" confirmed={!!trade.partyAConfirmedAt} />
-                  <span className="h-1 w-1 rounded-full bg-cream/25" />
-                  <StatusPill label="B" confirmed={!!trade.partyBConfirmedAt} />
-                </div>
-              </div>
+            {/* Who has confirmed so far */}
+            <div className="grid grid-cols-2 gap-2">
+              {trade.parties
+                  .slice()
+                  .sort((a, b) => (a.userId === user.id ? -1 : b.userId === user.id ? 1 : 0))
+                  .map((p) => {
+                    const done = Boolean(p.side === "A" ? trade.partyAConfirmedAt : trade.partyBConfirmedAt);
+                    return (
+                        <div
+                            key={p.userId}
+                            className={`flex min-w-0 items-center gap-2 rounded-2xl px-3 py-2.5 text-sm ${
+                              done ? "bg-sand text-ink" : "bg-white/10 text-cream/70"
+                            }`}
+                        >
+                          {done ? <Check size={16} strokeWidth={3} className="shrink-0" /> : <span className="h-2 w-2 shrink-0 rounded-full bg-cream/40" />}
+                          <span className="min-w-0 flex-1 leading-tight">
+                            <span className="block truncate font-bold">
+                              {p.userId === user.id ? t("trade.you") : p.user.name}
+                            </span>
+                            <span className="block truncate text-[11px] font-semibold opacity-70">
+                              {done ? t("trade.statusDone") : t("trade.statusWaiting")}
+                            </span>
+                          </span>
+                        </div>
+                    );
+                  })}
             </div>
 
             <QrScannerModal
@@ -429,7 +435,7 @@ export default function TradeDetailPage() {
 
       {/* Review */}
       {trade.status === "COMPLETED" && !hasMyReview && (
-          <section className="space-y-5 rounded-[2rem] bg-white p-6 shadow-[0_20px_60px_-25px_rgba(15,61,49,0.25)] ring-1 ring-forest/5 sm:p-8">
+          <section className="space-y-5 rounded-[2rem] bg-white p-6 shadow-[0_20px_60px_-25px_rgba(106,92,224,0.25)] ring-1 ring-forest/5 sm:p-8">
             <div>
               <h2 className="font-display text-xl text-forest sm:text-2xl">{t("trade.reviewTitle")}</h2>
               <p className="mt-1 text-sm text-ink/50">
@@ -438,30 +444,48 @@ export default function TradeDetailPage() {
             </div>
 
             {/* Рейтинг звёздами */}
-            <div className="flex flex-col items-center gap-2 rounded-3xl bg-forest/5 py-6">
-              <div className="flex gap-1.5">
-                {[1, 2, 3, 4, 5].map((n) => (
-                    <button
-                        key={n}
-                        type="button"
-                        onClick={() => setReviewRating(n)}
-                        className="transition active:scale-90"
-                        aria-label={t("trade.stars", { n })}
-                    >
-                      <Star
-                          size={32}
-                          className={
-                            n <= reviewRating
-                                ? "fill-coral text-coral"
-                                : "fill-transparent text-forest/15"
-                          }
-                          strokeWidth={1.5}
-                      />
-                    </button>
-                ))}
+            <div className="flex flex-col items-center gap-3 rounded-3xl bg-forest/5 py-6">
+              <div
+                  className="flex gap-1 sm:gap-2"
+                  role="radiogroup"
+                  aria-label={t("trade.ratingLine")}
+                  onPointerLeave={() => setHoverRating(0)}
+              >
+                {[1, 2, 3, 4, 5].map((n) => {
+                  const lit = n <= (hoverRating || reviewRating);
+                  return (
+                      <button
+                          key={n}
+                          type="button"
+                          role="radio"
+                          aria-checked={n === reviewRating}
+                          aria-label={t("trade.stars", { n })}
+                          onClick={() => setReviewRating(n)}
+                          onPointerEnter={(e) => {
+                            if (e.pointerType === "mouse") setHoverRating(n);
+                          }}
+                          className="grid h-12 w-12 place-items-center rounded-2xl transition active:scale-90"
+                      >
+                        <Star
+                            key={n === reviewRating ? `on-${reviewRating}` : "off"}
+                            size={36}
+                            strokeWidth={2}
+                            strokeLinejoin="round"
+                            className={
+                              lit
+                                  ? `fill-forest text-forest drop-shadow-[0_3px_0_#6a5ce0] ${n === reviewRating ? "animate-pop-once" : ""}`
+                                  : "fill-white text-forest/20"
+                            }
+                        />
+                      </button>
+                  );
+                })}
               </div>
-              <p className="text-sm font-medium text-ink/60">
-                {t("trade.ratingLine")} <span className="font-bold text-forest">{reviewRating}</span> {t("trade.ofFive")}
+              <p className="text-sm font-semibold text-ink/60">
+                <span className="font-extrabold text-forest">
+                  {(t("trade.ratingWords", { returnObjects: true }) as string[])[hoverRating || reviewRating]}
+                </span>{" "}
+                · {hoverRating || reviewRating} {t("trade.ofFive")}
               </p>
             </div>
 
@@ -470,7 +494,7 @@ export default function TradeDetailPage() {
               <p className="text-xs font-semibold uppercase tracking-wide text-ink/40">
                 {t("trade.whatGood")}
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-x-2 gap-y-2.5 pb-1">
                 {REVIEW_TAGS.map((tag) => {
                   const on = reviewTags.includes(tag);
                   return (
@@ -482,10 +506,9 @@ export default function TradeDetailPage() {
                                   on ? prev.filter((x) => x !== tag) : [...prev, tag],
                               )
                           }
-                          className={`rounded-full px-3.5 py-2 text-xs font-semibold transition active:scale-95 ${
-                              on
-                                  ? "bg-forest text-cream shadow-sm"
-                                  : "bg-forest/5 text-ink/60 hover:bg-forest/10"
+                          aria-pressed={on}
+                          className={`btn-3d btn-3d-sm rounded-full px-3.5 py-2 text-xs font-bold ${
+                              on ? "btn-3d-violet" : "btn-3d-white text-ink/70"
                           }`}
                       >
                         {labels.reviewTag(tag)}
@@ -527,7 +550,7 @@ export default function TradeDetailPage() {
                     setError(err instanceof Error ? err.message : t("common.error"));
                   }
                 }}
-                className="w-full rounded-2xl bg-forest py-3.5 text-sm font-semibold text-cream shadow-lg shadow-forest/20 transition hover:bg-forest/90 active:scale-[0.98]"
+                className="btn-3d btn-3d-violet w-full rounded-2xl py-3.5 text-sm font-extrabold"
             >
               {t("trade.sendReview")}
             </button>
@@ -561,7 +584,7 @@ export default function TradeDetailPage() {
 
             {/* TZ §21: photo/video evidence linked to this trade */}
             <div className="space-y-2">
-              <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-coral/10 px-3 py-2 text-xs font-semibold text-coral hover:bg-coral/20">
+              <label className="btn-3d btn-3d-coral btn-3d-sm inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold">
                 <Camera size={14} />
                 {evidenceUploading ? t("trade.uploading") : t("trade.addEvidence")}
                 <input
@@ -647,19 +670,6 @@ export default function TradeDetailPage() {
           )}
         </section>
       )}
-
-      {/* Audit */}
-      <section className="rounded-3xl bg-white/50 p-5">
-        <h2 className="mb-3 font-display text-lg">{t("trade.auditTitle")}</h2>
-        <ul className="space-y-1 text-xs text-ink/60">
-          {trade.auditLogs.map((l, i) => (
-            <li key={i}>
-              {new Date(l.createdAt).toLocaleString(dateLocale())} —{" "}
-              {t(`audit.${l.action}`, { defaultValue: l.action })}
-            </li>
-          ))}
-        </ul>
-      </section>
     </div>
   );
 }
@@ -698,15 +708,15 @@ function Btn({
 }) {
   const cls =
     tone === "primary"
-      ? "bg-coral text-white"
+      ? "btn-3d-violet"
       : tone === "danger"
-        ? "bg-coral/90 text-white"
-        : "bg-white text-ink ring-1 ring-forest/15";
+        ? "btn-3d-coral"
+        : "btn-3d-white";
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex min-h-11 w-full items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium sm:w-auto ${cls}`}
+      className={`btn-3d inline-flex min-h-11 w-full items-center justify-center rounded-xl px-4 py-2.5 text-sm font-bold sm:w-auto ${cls}`}
     >
       {children}
     </button>

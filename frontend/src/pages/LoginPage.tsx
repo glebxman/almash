@@ -204,7 +204,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={busy}
-              className="flex min-h-12 w-full items-center justify-center rounded-full bg-forest text-sm font-extrabold text-white shadow-[0_5px_0_#6f63d6] transition active:translate-y-0.5 active:shadow-none disabled:opacity-60"
+              className="flex min-h-12 w-full items-center justify-center rounded-full text-sm font-extrabold btn-3d btn-3d-violet"
             >
               {mode === "register" ? t("login.create") : t("login.submit")}
             </button>
@@ -220,7 +220,7 @@ export default function LoginPage() {
             type="button"
             disabled={busy || !canTelegram}
             onClick={onTelegram}
-            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#2AABEE] text-sm font-extrabold text-white shadow-[0_5px_0_#1e8fc7] transition active:translate-y-0.5 active:shadow-none disabled:opacity-50"
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full text-sm font-extrabold btn-3d btn-3d-telegram"
           >
             <TelegramMark />
             {t("login.telegram")}

@@ -344,6 +344,7 @@ export async function confirmHandoff(params: {
 
   if (
     ![
+      "TERMS_AGREED",
       "MEETING_SCHEDULED",
       "HANDOFF_PENDING",
       "PARTY_A_CONFIRMED",

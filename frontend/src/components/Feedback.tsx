@@ -95,7 +95,7 @@ function ConfirmSheet({
           <button
             type="button"
             onClick={() => onClose(false)}
-            className="min-h-12 rounded-2xl bg-ink/[0.06] text-sm font-bold text-ink transition active:scale-[0.97]"
+            className="btn-3d btn-3d-soft min-h-12 rounded-2xl text-sm font-bold"
           >
             {t("common.cancel")}
           </button>
@@ -103,8 +103,8 @@ function ConfirmSheet({
             type="button"
             autoFocus
             onClick={() => onClose(true)}
-            className={`min-h-12 rounded-2xl text-sm font-extrabold text-white transition active:scale-[0.97] ${
-              danger ? "bg-coral" : "bg-forest"
+            className={`btn-3d min-h-12 rounded-2xl text-sm font-extrabold ${
+              danger ? "btn-3d-coral" : "btn-3d-violet"
             }`}
           >
             {confirmText ?? t("common.delete")}

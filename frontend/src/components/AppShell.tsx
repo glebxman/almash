@@ -143,7 +143,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             ) : (
               <Link
                 to="/login"
-                className="inline-flex h-10 items-center rounded-full bg-ink px-4 text-sm font-bold text-cream"
+                className="btn-3d btn-3d-ink btn-3d-sm inline-flex h-10 items-center rounded-full px-4 text-sm font-bold"
               >
                 {t("nav.login")}
               </Link>
@@ -177,18 +177,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   key={href}
                   to={href}
                   className={clsx(
-                    "relative flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-[10px] font-bold",
+                    "nav-3d relative flex min-h-[56px] flex-col items-center justify-center gap-1 rounded-2xl px-1 text-[10px] font-bold [-webkit-tap-highlight-color:transparent]",
                     active && !emphasize ? "text-sand" : "text-cream/45",
                   )}
                 >
                   <span
                     className={clsx(
-                      "flex items-center justify-center rounded-2xl transition",
+                      "flex items-center justify-center rounded-2xl",
+                      (emphasize || active) && "btn-3d",
                       emphasize
-                        ? "h-11 w-11 -translate-y-0.5 bg-sand text-ink shadow-[0_4px_0_#b8d63a]"
+                        ? "btn-3d-lime -mt-0.5 h-11 w-11 [--edge:#b8d63a] [--lift:4px]"
                         : active
-                          ? "h-9 w-9 bg-white/10"
-                          : "h-9 w-9",
+                          ? "btn-3d-dark btn-3d-sm h-9 w-9"
+                          : "nav-sink h-9 w-9",
                     )}
                   >
                     <Icon size={emphasize ? 22 : 20} strokeWidth={active ? 2.6 : 2} />

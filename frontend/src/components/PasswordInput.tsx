@@ -9,7 +9,7 @@ type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & {
 
 /**
  * Password field with a show/hide eye toggle. While hidden it switches to a
- * plain font: Nunito's bold bullet renders huge, and the font size itself
+ * plain font: the brand font's bold bullet renders huge, and the font size itself
  * can't shrink below 16px on phones without triggering iOS focus zoom.
  */
 export function PasswordInput({ className = "", ...props }: Props) {

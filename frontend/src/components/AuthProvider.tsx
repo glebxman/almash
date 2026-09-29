@@ -11,7 +11,6 @@ import { setAuthToken } from "@/lib/session";
 import {
   ensureTelegramWriteAccess,
   bootTelegramWebApp,
-  getTelegramInitData,
   type TelegramAuthPayload,
 } from "@/lib/telegram";
 
@@ -88,33 +87,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     bootTelegramWebApp();
     let cancelled = false;
     (async () => {
-      let current: User | null = null;
       try {
         const data = await api<AuthResponse>("/api/auth");
-        current = data.user;
         if (cancelled) return;
         setUser(data.user);
         if (data.telegram) setTelegram(data.telegram);
       } catch {
         if (!cancelled) setUser(null);
       }
-      // Opened as a Telegram Mini App without a session: sign in silently
-      // with the signed initData, no login screen needed.
-      const initData = getTelegramInitData();
-      if (!current && initData && !cancelled) {
-        try {
-          const data = await api<AuthResponse>("/api/auth", {
-            method: "POST",
-            body: JSON.stringify({ initData, deviceFingerprint: deviceFingerprint() }),
-          });
-          if (!cancelled) {
-            applyAuth(data);
-            void ensureTelegramWriteAccess();
-          }
-        } catch {
-          // fall back to the login page with the Telegram button
-        }
-      }
+      // No silent Telegram sign-in: without a session the Mini App shows the
+      // login page first and the user taps "Войти через Telegram" themselves.
       if (!cancelled) setLoading(false);
     })();
     return () => {

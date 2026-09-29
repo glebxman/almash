@@ -43,7 +43,7 @@ function SettingsGroup({
           {title}
         </h2>
       )}
-      <div className="divide-y divide-ink/[0.06] overflow-hidden rounded-2xl bg-white shadow-sm">
+      <div className="card-3d divide-y divide-ink/[0.06] overflow-hidden rounded-2xl">
         {children}
       </div>
     </section>
@@ -67,7 +67,9 @@ function SettingsRow({
 }) {
   const content = (
     <>
-      <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-[10px] text-white ${iconBg}`}>
+      <span
+        className={`btn-3d btn-3d-sm pointer-events-none grid h-8 w-8 shrink-0 place-items-center rounded-[10px] ${iconBg}`}
+      >
         <Icon size={18} strokeWidth={2.2} />
       </span>
       <span className={`flex-1 text-[15px] font-semibold ${danger ? "text-coral" : "text-ink"}`}>
@@ -77,7 +79,8 @@ function SettingsRow({
     </>
   );
   const className =
-    "flex min-h-[52px] w-full items-center gap-3 px-4 py-2.5 text-left transition active:bg-ink/[0.04]";
+    // nav-3d: pressing the row sinks its 3D icon key
+    "nav-3d flex min-h-[56px] w-full items-center gap-3 px-4 py-2.5 text-left transition active:bg-ink/[0.04]";
 
   return to ? (
     <Link to={to} className={className}>
@@ -147,19 +150,19 @@ export default function ProfilePage() {
               disabled={avatarBusy}
               aria-label={t("profile.avatar.change")}
               title={t("profile.avatar.change")}
-              className="group relative rounded-full transition active:scale-95"
+              className="nav-3d group relative rounded-full"
           >
             <img
                 src={mediaUrl(user.avatarUrl) || "https://placehold.co/96x96"}
                 alt=""
-                className="h-24 w-24 rounded-full object-cover shadow-[0_8px_24px_rgba(23,21,31,0.12)] ring-4 ring-white"
+                className="h-24 w-24 rounded-full object-cover shadow-[0_6px_0_#e2dcf2,0_14px_28px_-10px_rgba(23,21,31,0.25)] ring-4 ring-white"
             />
             {avatarBusy && (
                 <span className="absolute inset-0 grid place-items-center rounded-full bg-ink/45">
                   <Loader2 size={28} className="animate-spin text-white" />
                 </span>
             )}
-            <span className="absolute bottom-0 right-0 grid h-8 w-8 place-items-center rounded-full bg-forest text-white shadow-md ring-[3px] ring-cream">
+            <span className="btn-3d btn-3d-violet btn-3d-sm pointer-events-none absolute bottom-0.5 right-0 grid h-8 w-8 place-items-center rounded-full ring-[3px] ring-cream">
               <Camera size={16} strokeWidth={2.4} />
             </span>
           </button>
@@ -195,21 +198,21 @@ export default function ProfilePage() {
             {user.city ? ` · ${user.city}` : ""}
           </p>
 
-          <div className="mt-4 grid w-full max-w-md grid-cols-3 divide-x divide-ink/[0.06] overflow-hidden rounded-2xl bg-white shadow-sm">
-            <div className="flex flex-col items-center gap-0.5 px-2 py-3">
+          <div className="mt-4 grid w-full max-w-md grid-cols-3 gap-2.5 pb-1">
+            <div className="card-3d flex flex-col items-center gap-0.5 rounded-2xl px-2 py-3">
               <span className="flex items-center gap-1 text-base font-extrabold text-ink">
-                <Star size={15} className="fill-amber-400 text-amber-400" />
+                <Star size={15} className="fill-forest text-forest" />
                 {(user.rating ?? 0).toFixed(1)}
               </span>
               <span className="text-[11px] font-semibold text-ink/45">{t("profile.stats.rating")}</span>
             </div>
-            <div className="flex flex-col items-center gap-0.5 px-2 py-3">
+            <div className="card-3d flex flex-col items-center gap-0.5 rounded-2xl px-2 py-3">
               <span className="text-base font-extrabold text-ink">{user.completedTrades ?? 0}</span>
               <span className="text-[11px] font-semibold text-ink/45">{t("profile.stats.trades")}</span>
             </div>
-            <div className="flex min-w-0 flex-col items-center gap-0.5 px-2 py-3">
+            <div className="card-3d flex min-w-0 flex-col items-center gap-0.5 rounded-2xl px-2 py-3">
               <span className="flex max-w-full items-center gap-1 text-base font-extrabold text-ink">
-                <ShieldCheck size={15} className="shrink-0 text-forest" />
+                <ShieldCheck size={15} className="hidden shrink-0 text-forest min-[400px]:block" />
                 <span className="truncate">{trust}</span>
               </span>
               <span className="text-[11px] font-semibold text-ink/45">{t("profile.stats.trust")}</span>
@@ -219,14 +222,14 @@ export default function ProfilePage() {
 
         <div className="mx-auto w-full max-w-md space-y-5">
           <SettingsGroup>
-            <SettingsRow to="/favorites" icon={Heart} iconBg="bg-coral" label={t("profile.favorites")} />
-            <SettingsRow to="/notifications" icon={Bell} iconBg="bg-amber-400" label={t("profile.alerts")} />
+            <SettingsRow to="/favorites" icon={Heart} iconBg="btn-3d-coral" label={t("profile.favorites")} />
+            <SettingsRow to="/notifications" icon={Bell} iconBg="btn-3d-violet" label={t("profile.alerts")} />
           </SettingsGroup>
 
           {/* The admin link lives only in the desktop header, so phones reach it from here. */}
           {user.role === "ADMIN" && (
               <SettingsGroup>
-                <SettingsRow to="/admin" icon={Shield} iconBg="bg-ink" label={t("nav.admin")} />
+                <SettingsRow to="/admin" icon={Shield} iconBg="btn-3d-ink" label={t("nav.admin")} />
               </SettingsGroup>
           )}
 
@@ -238,7 +241,7 @@ export default function ProfilePage() {
           <SettingsGroup>
             <SettingsRow
                 icon={LogOut}
-                iconBg="bg-coral"
+                iconBg="btn-3d-coral"
                 label={t("profile.logout")}
                 danger
                 onClick={async () => {
@@ -250,7 +253,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Мои наборы (ItemSets - TZ п. 8) */}
-        <section className="space-y-4 rounded-2xl bg-white p-4 shadow-sm sm:p-5">
+        <section className="card-3d space-y-4 rounded-2xl p-4 sm:p-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h2 className="flex items-center gap-2 font-display text-xl leading-tight text-ink sm:text-2xl">
@@ -266,8 +269,8 @@ export default function ProfilePage() {
                   setItemSetError("");
                 }}
                 aria-label={isCreatingSet ? t("profile.sets.cancel") : t("profile.sets.create")}
-                className={`inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-extrabold transition active:scale-95 ${
-                  isCreatingSet ? "bg-ink/[0.06] text-ink/70 hover:bg-ink/10" : "bg-forest text-white shadow-sm hover:brightness-105"
+                className={`btn-3d btn-3d-sm inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-extrabold ${
+                  isCreatingSet ? "btn-3d-soft" : "btn-3d-violet"
                 }`}
             >
               {isCreatingSet ? <X size={16} /> : <Plus size={16} strokeWidth={2.6} />}
@@ -394,7 +397,7 @@ export default function ProfilePage() {
                 <button
                     type="submit"
                     disabled={itemSetBusy || items.length === 0}
-                    className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-forest text-sm font-extrabold text-white shadow-sm transition active:scale-[0.98] disabled:opacity-50"
+                    className="btn-3d btn-3d-violet inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full text-sm font-extrabold"
                 >
                   {itemSetBusy && <Loader2 size={16} className="animate-spin" />}
                   {itemSetBusy ? t("profile.sets.saving") : t("profile.sets.save")}
@@ -472,7 +475,7 @@ export default function ProfilePage() {
               <p className="rounded-xl bg-coral/10 px-4 py-3 text-sm font-semibold text-coral">{listingErr}</p>
           )}
           {items.length === 0 ? (
-              <p className="rounded-2xl bg-white px-4 py-8 text-center text-sm font-semibold text-ink/50 shadow-sm">
+              <p className="card-3d rounded-2xl px-4 py-8 text-center text-sm font-semibold text-ink/50">
                 {t("profile.listings.empty")}
               </p>
           ) : (

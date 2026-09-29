@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { api } from "@/lib/client";
 import { Link, useNavigate } from "react-router-dom";
-import { CheckCheck } from "lucide-react";
+import { CheckCheck, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { dateLocale } from "@/lib/labels";
 
@@ -43,7 +43,7 @@ export default function NotificationsPage() {
         <h1 className="font-display text-3xl text-forest">{t("pages.notifications.title")}</h1>
         <button
             type="button"
-            className="inline-flex items-center justify-center gap-1.5 rounded-full bg-green-400/10 p-2.5 text-sm font-medium text-green-900 transition hover:bg-green-900/15 active:scale-[0.97] sm:px-4 sm:py-2"
+            className="btn-3d btn-3d-soft btn-3d-sm inline-flex items-center justify-center gap-1.5 rounded-full p-2.5 text-sm font-bold sm:px-4 sm:py-2"
             onClick={async () => {
               await api("/api/notifications", {
                 method: "POST",
@@ -74,7 +74,7 @@ export default function NotificationsPage() {
               }
             >
               <div className="flex items-start justify-between gap-3">
-                <div>
+                <div className="min-w-0 flex-1">
                   <p className="font-medium">{n.title}</p>
                   <p className="text-ink/65">{n.body}</p>
                   <p className="mt-1 text-[10px] text-ink/40">
@@ -84,9 +84,10 @@ export default function NotificationsPage() {
                 {n.tradeId && (
                   <Link
                     to={`/trades/${n.tradeId}`}
-                    className="shrink-0 text-xs text-forest underline"
+                    className="btn-3d btn-3d-violet btn-3d-sm inline-flex min-h-9 shrink-0 items-center gap-1 rounded-full pl-3.5 pr-2.5 text-xs font-bold"
                   >
                     {t("pages.notifications.open")}
+                    <ChevronRight size={14} strokeWidth={2.8} />
                   </Link>
                 )}
               </div>

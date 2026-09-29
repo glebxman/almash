@@ -13,7 +13,7 @@ export default {
         },
         coral: "#FF6D57",
         cream: "#F7F3EA",
-        mist: "#9EE4F2",
+        mist: "#ECE8FF",
         ink: "#17151F",
         sand: "#D6F15C",
         lilac: "#C4B5FF",
@@ -22,8 +22,8 @@ export default {
         "4xl": "2rem",
       },
       fontFamily: {
-        display: ["Nunito", "system-ui", "sans-serif"],
-        sans: ["Nunito", "system-ui", "sans-serif"],
+        display: ["Manrope", "system-ui", "sans-serif"],
+        sans: ["Manrope", "system-ui", "sans-serif"],
       },
       keyframes: {
         rise: {
@@ -59,6 +59,7 @@ export default {
         wiggle: "wiggle 0.7s ease-in-out infinite",
         wave: "wave 0.8s ease-in-out infinite",
         pop: "pop 1.4s ease-in-out infinite",
+        "pop-once": "pop 0.35s cubic-bezier(0.22, 1.4, 0.36, 1)",
       },
     },
   },

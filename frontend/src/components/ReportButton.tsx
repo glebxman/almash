@@ -1,6 +1,6 @@
 import { useEffect, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
-import { CheckCircle2, X } from "lucide-react";
+import { CheckCircle2, Flag, X } from "lucide-react";
 import { api } from "@/lib/client";
 import { FancySelect } from "@/components/FancySelect";
 import { REPORT_REASONS } from "@/lib/constants";
@@ -116,8 +116,9 @@ export function ReportButton({ targetUserId, itemId, tradeId }: Props) {
           swallow(e);
           setOpen(true);
         }}
-        className="inline-flex min-h-9 items-center text-xs text-coral underline"
+        className="btn-3d btn-3d-coral btn-3d-sm inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-xs font-bold"
       >
+        <Flag size={14} strokeWidth={2.6} />
         {t("report.button")}
       </button>
 
@@ -169,14 +170,14 @@ export function ReportButton({ targetUserId, itemId, tradeId }: Props) {
                   type="button"
                   disabled={busy}
                   onClick={submit}
-                  className="min-h-12 w-full rounded-2xl bg-coral py-3 text-sm font-semibold text-white transition active:scale-[0.98] disabled:opacity-60"
+                  className="btn-3d btn-3d-coral min-h-12 w-full rounded-2xl py-3 text-sm font-bold"
                 >
                   {t("report.submit")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="min-h-11 w-full rounded-2xl bg-mist/60 py-2.5 text-sm font-semibold text-ink/70"
+                  className="btn-3d btn-3d-soft btn-3d-sm min-h-11 w-full rounded-2xl py-2.5 text-sm font-bold"
                 >
                   {t("report.cancel")}
                 </button>

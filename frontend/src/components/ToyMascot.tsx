@@ -1,103 +1,124 @@
 import clsx from "clsx";
+import { useEffect, useRef, type CSSProperties } from "react";
 
 type Mood = "idle" | "yay" | "sad" | "wave";
 
+const clamp = (v: number) => Math.max(-1, Math.min(1, v));
+
+type Face = "front" | "back" | "right" | "left" | "top" | "bottom";
+
+// Brand palette; opposite faces share a hue family like a real cube.
+const STICKER: Record<Face, string> = {
+  front: "#8B7CFF",
+  back: "#C4B5FF",
+  right: "#FF6D57",
+  left: "#FFFDF7",
+  top: "#D6F15C",
+  bottom: "#A9C92E",
+};
+
+const FACES: Face[] = ["front", "back", "right", "left", "top", "bottom"];
+
+// 27 cubies of a 3×3×3 cube; CSS y grows downwards, so y = -1 is the top layer.
+const CUBIES = Array.from({ length: 27 }, (_, i) => {
+  const x = (i % 3) - 1;
+  const y = (Math.floor(i / 3) % 3) - 1;
+  const z = Math.floor(i / 9) - 1;
+  const outside: Record<Face, boolean> = {
+    front: z === 1,
+    back: z === -1,
+    right: x === 1,
+    left: x === -1,
+    top: y === -1,
+    bottom: y === 1,
+  };
+  // Scramble moves (see mc-twist): 1) top layer +90° around Y, 2) bottom layer
+  // -90° around Y, 3) right column +90° around X (turns up). A cubie joins the
+  // column by where it sits AFTER the Y twists: rotateY(90°) maps x' = z,
+  // rotateY(-90°) maps x' = -z.
+  const a1 = y === -1 ? 90 : 0;
+  const a2 = y === 1 ? -90 : 0;
+  const inColumn = y === -1 ? z === 1 : y === 1 ? z === -1 : x === 1;
+  const style = {
+    "--x": x,
+    "--y": y,
+    "--z": z,
+    "--a1": `${a1}deg`,
+    "--ty": `${a1 + a2}deg`,
+    "--cx": inColumn ? "90deg" : "0deg",
+  } as CSSProperties;
+  return { key: i, outside, style };
+});
+
+/**
+ * Rubik's-cube mascot built with CSS 3D transforms. Its horizontal layers
+ * twist left and right to scramble, then twist back until it is solved again.
+ * The scene tilts slightly toward the pointer through `--lx` / `--ly`.
+ * `reverse` plays the twists the other way round.
+ */
 export function ToyMascot({
   mood = "idle",
+  reverse = false,
   className,
 }: {
   mood?: Mood;
+  reverse?: boolean;
   className?: string;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let raf = 0;
+    let px = 0;
+    let py = 0;
+    const apply = () => {
+      raf = 0;
+      const r = el.getBoundingClientRect();
+      const lx = clamp((px - (r.left + r.width / 2)) / (window.innerWidth * 0.5));
+      const ly = clamp((py - (r.top + r.height / 2)) / (window.innerHeight * 0.5));
+      el.style.setProperty("--lx", lx.toFixed(3));
+      el.style.setProperty("--ly", ly.toFixed(3));
+    };
+    const onMove = (e: PointerEvent) => {
+      px = e.clientX;
+      py = e.clientY;
+      if (!raf) raf = requestAnimationFrame(apply);
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
   return (
-    <svg
-      viewBox="0 0 220 220"
-      className={clsx("overflow-visible", className)}
+    <div
+      ref={ref}
+      className={clsx("mascot-cube", className)}
+      data-mood={mood}
+      data-reverse={reverse || undefined}
       aria-hidden
     >
-      <defs>
-        <linearGradient id="blob" x1="40" y1="20" x2="180" y2="200">
-          <stop offset="0%" stopColor="#C4B5FF" />
-          <stop offset="100%" stopColor="#8B7CFF" />
-        </linearGradient>
-      </defs>
-      <ellipse
-        cx="110"
-        cy="200"
-        rx="46"
-        ry="8"
-        fill="#1B1828"
-        opacity="0.12"
-      />
-      <g className={mood === "yay" ? "origin-center animate-wiggle" : undefined}>
-        <path
-          d="M48 118c8-52 40-78 62-78s54 26 62 78c6 38-16 72-62 72s-68-34-62-72z"
-          fill="url(#blob)"
-        />
-        <ellipse cx="110" cy="148" rx="38" ry="22" fill="#E8FF7A" />
-        <circle cx="86" cy="108" r="16" fill="#FFFDF7" />
-        <circle cx="134" cy="108" r="16" fill="#FFFDF7" />
-        <circle
-          cx="90"
-          cy="110"
-          r="7"
-          fill="#17151F"
-          className={mood === "yay" ? "origin-center animate-softpulse" : undefined}
-        />
-        <circle cx="138" cy="110" r="7" fill="#17151F" />
-        <circle cx="94" cy="107" r="2.4" fill="white" />
-        <circle cx="142" cy="107" r="2.4" fill="white" />
-        {mood === "sad" ? (
-          <path
-            d="M96 142c8 6 20 6 28 0"
-            fill="none"
-            stroke="#17151F"
-            strokeWidth="4"
-            strokeLinecap="round"
-            transform="scale(1,-1) translate(0,-284)"
-          />
-        ) : (
-          <path
-            d="M96 140c8 10 20 10 28 0"
-            fill="none"
-            stroke="#17151F"
-            strokeWidth="4"
-            strokeLinecap="round"
-          />
-        )}
-        <path
-          d={
-            mood === "yay"
-              ? "M52 92c-22-28-28-8-18 10"
-              : mood === "wave"
-                ? "M48 78c-8-32 18-38 22-12"
-                : "M46 108c-18-8-22 18-6 22"
-          }
-          fill="none"
-          stroke="#17151F"
-          strokeWidth="7"
-          strokeLinecap="round"
-          className={mood === "wave" ? "origin-[48px_90px] animate-wave" : undefined}
-        />
-        <path
-          d={
-            mood === "yay"
-              ? "M168 92c22-28 28-8 18 10"
-              : "M174 108c18-8 22 18 6 22"
-          }
-          fill="none"
-          stroke="#17151F"
-          strokeWidth="7"
-          strokeLinecap="round"
-        />
-        <circle cx="168" cy="58" r="7" fill="#FF6D57" className="animate-pop" />
-        <path
-          d="M168 46v-8M160 50l-6-6M176 50l6-6"
-          stroke="#FF6D57"
-          strokeWidth="3"
-          strokeLinecap="round"
-        />
-      </g>
-    </svg>
+      <div className="mc-shadow" />
+      <div className="mc-float">
+        <div className="mc-tilt">
+          <div className="mc-spin">
+            {CUBIES.map((c) => (
+              <div key={c.key} className="mc-cubie" style={c.style}>
+                {FACES.map((f) => (
+                  <div key={f} className={`mc-face mc-${f}`}>
+                    {c.outside[f] && (
+                      <span className="mc-sticker" style={{ backgroundColor: STICKER[f] }} />
+                    )}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

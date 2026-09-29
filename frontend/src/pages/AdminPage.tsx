@@ -23,11 +23,11 @@ const TABS = ["overview", "users", "items", "trades", "disputes", "reports", "mo
 const card = "space-y-2.5 rounded-2xl bg-white p-3.5 text-sm shadow-sm ring-1 ring-forest/5";
 const actions = "flex flex-wrap gap-2";
 const btnBase =
-  "inline-flex min-h-9 flex-1 items-center justify-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition active:scale-95 sm:flex-none";
+  "btn-3d btn-3d-sm inline-flex min-h-9 flex-1 items-center justify-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold sm:flex-none";
 const btn = {
-  neutral: `${btnBase} bg-mist/70 text-ink hover:bg-mist`,
-  danger: `${btnBase} bg-coral/15 text-coral hover:bg-coral/25`,
-  primary: `${btnBase} bg-forest/10 text-forest hover:bg-forest/20`,
+  neutral: `${btnBase} btn-3d-soft`,
+  danger: `${btnBase} btn-3d-coral`,
+  primary: `${btnBase} btn-3d-violet`,
 };
 
 function Badge({ children, tone = "neutral" }: { children: React.ReactNode; tone?: "neutral" | "danger" | "ok" }) {
@@ -98,7 +98,7 @@ export default function AdminPage() {
         <h1 className="min-w-0 truncate font-display text-2xl text-ink sm:text-3xl">{t("admin.title")}</h1>
         <button
           type="button"
-          className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full bg-forest px-3.5 text-xs font-bold text-white shadow-sm active:scale-95"
+          className="btn-3d btn-3d-violet btn-3d-sm inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-xs font-bold"
           onClick={() => run({ action: "run_jobs" })}
         >
           <Play size={14} />
@@ -317,7 +317,7 @@ export default function AdminPage() {
                   placeholder={t("admin.forbiddenPlaceholder")}
                   className="min-h-11 min-w-0 flex-1 rounded-xl border border-forest/15 bg-white px-3 text-sm outline-none focus:border-forest/40"
                 />
-                <button type="submit" className="min-h-11 shrink-0 rounded-xl bg-forest px-4 text-sm font-bold text-white">
+                <button type="submit" className="btn-3d btn-3d-violet btn-3d-sm min-h-11 shrink-0 rounded-xl px-4 text-sm font-bold">
                   {t("admin.add")}
                 </button>
               </form>

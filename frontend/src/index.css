@@ -7,11 +7,11 @@
   --forest-deep: #1b1828;
   --coral: #ff6d57;
   --cream: #f7f3ea;
-  --mist: #9ee4f2;
+  --mist: #ece8ff;
   --ink: #17151f;
   --sand: #d6f15c;
   --lilac: #c4b5ff;
-  --font-sans: "Nunito", system-ui, sans-serif;
+  --font-sans: "Manrope", system-ui, sans-serif;
   --background: var(--cream);
   --foreground: var(--ink);
 
@@ -45,8 +45,8 @@ body {
   background-color: #f7f3ea;
   background-image:
     radial-gradient(ellipse 70% 45% at 0% -10%, rgba(139, 124, 255, 0.28), transparent 55%),
-    radial-gradient(ellipse 55% 40% at 100% 0%, rgba(158, 228, 242, 0.45), transparent 50%),
-    radial-gradient(ellipse 50% 35% at 80% 100%, rgba(214, 241, 92, 0.35), transparent 50%),
+    radial-gradient(ellipse 55% 40% at 100% 0%, rgba(214, 241, 92, 0.3), transparent 50%),
+    radial-gradient(ellipse 50% 35% at 80% 100%, rgba(196, 181, 255, 0.35), transparent 50%),
     radial-gradient(ellipse 40% 30% at 10% 90%, rgba(255, 109, 87, 0.16), transparent 50%);
   font-family: var(--font-sans), system-ui, sans-serif;
   min-height: 100dvh;
@@ -56,7 +56,67 @@ body {
 .font-display {
   font-family: var(--font-sans), system-ui, sans-serif;
   font-weight: 800;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.025em;
+}
+
+/* Tactile brand checkbox: rounded, 3D edge, violet when checked with a
+   popping tick. Still a native input, so forms and a11y work unchanged. */
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-grid;
+  place-content: center;
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  border: 2px solid #cfc6f7;
+  border-radius: 0.45rem;
+  background-color: #fff;
+  box-shadow: 0 2px 0 #dcd5ee;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.12s ease;
+}
+input[type="checkbox"]::after {
+  content: "";
+  width: 0.7rem;
+  height: 0.7rem;
+  background-color: #fff;
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  transform: scale(0);
+  transition: transform 0.2s cubic-bezier(0.22, 1.4, 0.36, 1);
+}
+@media (hover: hover) {
+  input[type="checkbox"]:hover:not(:disabled) {
+    border-color: #8b7cff;
+  }
+}
+input[type="checkbox"]:checked {
+  border-color: #8b7cff;
+  background-color: #8b7cff;
+  box-shadow: 0 2px 0 #6a5ce0;
+}
+input[type="checkbox"]:checked::after {
+  transform: scale(1);
+}
+input[type="checkbox"]:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 #dcd5ee;
+}
+input[type="checkbox"]:checked:active:not(:disabled) {
+  box-shadow: 0 1px 0 #6a5ce0;
+}
+input[type="checkbox"]:focus-visible {
+  outline: 3px solid rgba(139, 124, 255, 0.45);
+  outline-offset: 2px;
+}
+input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 /* iOS Safari / Telegram WebView zooms into any focused field under 16px.
@@ -73,6 +133,128 @@ body {
 @layer components {
   .btn-touch {
     @apply inline-flex min-h-11 items-center justify-center rounded-full px-4 py-2.5 text-sm font-bold;
+  }
+
+  /* Tactile 3D button: a solid "edge" under the face that collapses on press.
+     Pick a colour with .btn-3d-{violet,lime,coral,ink,white,telegram}. */
+  .btn-3d {
+    --edge: #6a5ce0;
+    --lift: 5px;
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 58%);
+    box-shadow:
+      0 var(--lift) 0 var(--edge),
+      0 calc(var(--lift) + 5px) 14px -4px rgba(23, 21, 31, 0.24),
+      inset 0 1.5px 0 rgba(255, 255, 255, 0.4);
+    transform: translateY(0);
+    transition:
+      transform 0.16s cubic-bezier(0.3, 0.7, 0.4, 1),
+      box-shadow 0.16s cubic-bezier(0.3, 0.7, 0.4, 1),
+      filter 0.2s ease,
+      scale 0.25s cubic-bezier(0.22, 1.2, 0.36, 1);
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  @media (hover: hover) {
+    .btn-3d:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow:
+        0 calc(var(--lift) + 1px) 0 var(--edge),
+        0 calc(var(--lift) + 8px) 18px -4px rgba(23, 21, 31, 0.26),
+        inset 0 1.5px 0 rgba(255, 255, 255, 0.4);
+      filter: brightness(1.04);
+    }
+  }
+  .btn-3d:active:not(:disabled) {
+    transform: translateY(calc(var(--lift) - 1px));
+    box-shadow:
+      0 1px 0 var(--edge),
+      0 2px 6px -2px rgba(23, 21, 31, 0.2),
+      inset 0 1.5px 0 rgba(255, 255, 255, 0.3);
+    transition-duration: 0.06s;
+  }
+  .btn-3d:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    box-shadow: 0 2px 0 var(--edge);
+    transform: translateY(calc(var(--lift) - 2px));
+  }
+  .btn-3d:focus-visible {
+    outline: 3px solid rgba(139, 124, 255, 0.45);
+    outline-offset: 3px;
+  }
+  .btn-3d-lg {
+    --lift: 7px;
+  }
+  .btn-3d-sm {
+    --lift: 3px;
+  }
+  /* Static raised surface in the same language as .btn-3d, but it doesn't press. */
+  .card-3d {
+    background-color: #fff;
+    box-shadow:
+      0 5px 0 #e2dcf2,
+      0 12px 24px -10px rgba(23, 21, 31, 0.16),
+      inset 0 1.5px 0 rgba(255, 255, 255, 0.9);
+  }
+
+  /* Muted key for dark surfaces such as the bottom tab bar. */
+  .btn-3d-dark {
+    --edge: rgba(0, 0, 0, 0.55);
+    background-color: rgba(255, 255, 255, 0.1);
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0) 60%);
+    color: inherit;
+  }
+  /* Pressing anywhere on a tab (icon or label) sinks its 3D key; plain tabs just dip. */
+  .nav-sink {
+    transition: transform 0.16s cubic-bezier(0.3, 0.7, 0.4, 1);
+  }
+  .nav-3d:active .nav-sink {
+    transform: translateY(2px) scale(0.94);
+    transition-duration: 0.06s;
+  }
+  .nav-3d:active .btn-3d {
+    transform: translateY(calc(var(--lift) - 1px));
+    box-shadow:
+      0 1px 0 var(--edge),
+      0 2px 6px -2px rgba(23, 21, 31, 0.2),
+      inset 0 1.5px 0 rgba(255, 255, 255, 0.3);
+    transition-duration: 0.06s;
+  }
+  .btn-3d-soft {
+    --edge: #dcd5ee;
+    background-color: #f1eef9;
+    color: #17151f;
+  }
+  .btn-3d-violet {
+    --edge: #6a5ce0;
+    background-color: #8b7cff;
+    color: #fff;
+  }
+  .btn-3d-lime {
+    --edge: #a9c92e;
+    background-color: #d6f15c;
+    color: #17151f;
+  }
+  .btn-3d-coral {
+    --edge: #d24b37;
+    background-color: #ff6d57;
+    color: #fff;
+  }
+  .btn-3d-ink {
+    --edge: #000;
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0) 58%);
+    background-color: #17151f;
+    color: #f7f3ea;
+  }
+  .btn-3d-white {
+    --edge: #e2dcf2;
+    background-color: #fff;
+    color: #17151f;
+  }
+  .btn-3d-telegram {
+    --edge: #1c8cc9;
+    background-color: #2aabee;
+    color: #fff;
   }
 
   .card-mobile {
@@ -244,6 +426,184 @@ body {
   background-color: #efeaf9;
   background-image:
     radial-gradient(rgba(139, 124, 255, 0.14) 1.2px, transparent 1.3px),
-    linear-gradient(160deg, rgba(158, 228, 242, 0.35), rgba(214, 241, 92, 0.18));
+    linear-gradient(160deg, rgba(196, 181, 255, 0.35), rgba(214, 241, 92, 0.18));
   background-size: 18px 18px, 100% 100%;
+}
+
+/* ToyMascot: CSS-3D Rubik's cube whose layers twist to scramble and solve it. */
+.mascot-cube {
+  --c: 15.5cqw;
+  --h: calc(var(--c) / 2);
+  --p: 16.5cqw;
+  position: relative;
+  aspect-ratio: 1;
+  container-type: inline-size;
+  perspective: 600cqw;
+}
+.mascot-cube .mc-float,
+.mascot-cube .mc-tilt,
+.mascot-cube .mc-spin {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+.mascot-cube .mc-float {
+  animation: mc-float 3.4s ease-in-out infinite;
+}
+.mascot-cube .mc-tilt {
+  transform: rotateX(calc(var(--ly, 0) * -6deg)) rotateY(calc(var(--lx, 0) * 10deg));
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.mascot-cube .mc-spin {
+  transform: rotateX(-24deg) rotateY(40deg);
+  animation: mc-sway 7s ease-in-out infinite;
+}
+.mascot-cube .mc-cubie {
+  --pos: translate3d(calc(var(--x) * var(--p)), calc(var(--y) * var(--p)), calc(var(--z) * var(--p)));
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform-style: preserve-3d;
+  transform: rotateX(0deg) rotateY(0deg) var(--pos);
+  animation: mc-twist 9s linear infinite;
+}
+.mascot-cube .mc-face {
+  position: absolute;
+  left: calc(var(--c) / -2);
+  top: calc(var(--c) / -2);
+  width: var(--c);
+  height: var(--c);
+  border-radius: 2.2cqw;
+  background: #17151f;
+  backface-visibility: hidden;
+}
+.mascot-cube .mc-front { transform: translateZ(var(--h)); }
+.mascot-cube .mc-back { transform: rotateY(180deg) translateZ(var(--h)); }
+.mascot-cube .mc-right { transform: rotateY(90deg) translateZ(var(--h)); }
+.mascot-cube .mc-left { transform: rotateY(-90deg) translateZ(var(--h)); }
+.mascot-cube .mc-top { transform: rotateX(90deg) translateZ(var(--h)); }
+.mascot-cube .mc-bottom { transform: rotateX(-90deg) translateZ(var(--h)); }
+.mascot-cube .mc-sticker {
+  position: absolute;
+  inset: 1cqw;
+  border-radius: 2cqw;
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 42%),
+    linear-gradient(315deg, rgba(23, 21, 31, 0.22), rgba(23, 21, 31, 0) 50%);
+  box-shadow: inset 0 0 0 0.4cqw rgba(255, 255, 255, 0.25);
+}
+.mascot-cube .mc-top .mc-sticker { filter: brightness(1.08); }
+.mascot-cube .mc-right .mc-sticker { filter: brightness(0.9); }
+.mascot-cube .mc-shadow {
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  bottom: 2%;
+  height: 9%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(27, 24, 40, 0.3), rgba(27, 24, 40, 0));
+  animation: mc-shadow 3.4s ease-in-out infinite;
+}
+
+/* Mirror image: every twist and the sway run the opposite way round. */
+.mascot-cube[data-reverse] {
+  transform: scaleX(-1);
+}
+.mascot-cube[data-reverse] .mc-tilt {
+  transform: rotateX(calc(var(--ly, 0) * -6deg)) rotateY(calc(var(--lx, 0) * -10deg));
+}
+
+.mascot-cube[data-mood="yay"] .mc-float {
+  animation: mc-hop 0.9s cubic-bezier(0.33, 0, 0.3, 1) infinite;
+}
+.mascot-cube[data-mood="yay"] .mc-cubie {
+  animation-duration: 4.5s;
+}
+.mascot-cube[data-mood="sad"] {
+  filter: saturate(0.4);
+}
+.mascot-cube[data-mood="sad"] .mc-spin {
+  transform: rotateX(-16deg) rotateY(40deg) rotateZ(-6deg);
+  animation: none;
+}
+.mascot-cube[data-mood="sad"] .mc-cubie {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot-cube *,
+  .mascot-cube .mc-tilt {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Scramble: top layer right, bottom layer left, right column up; then undo in
+   reverse. Per-cubie angles (--a1, --ty, --cx) come from ToyMascot. */
+@keyframes mc-twist {
+  0%, 8% {
+    transform: rotateX(0deg) rotateY(0deg) var(--pos);
+    animation-timing-function: cubic-bezier(0.5, 0, 0.2, 1.15);
+  }
+  15%, 20% {
+    transform: rotateX(0deg) rotateY(var(--a1)) var(--pos);
+    animation-timing-function: cubic-bezier(0.5, 0, 0.2, 1.15);
+  }
+  27%, 32% {
+    transform: rotateX(0deg) rotateY(var(--ty)) var(--pos);
+    animation-timing-function: cubic-bezier(0.5, 0, 0.2, 1.15);
+  }
+  39%, 50% {
+    transform: rotateX(var(--cx)) rotateY(var(--ty)) var(--pos);
+    animation-timing-function: cubic-bezier(0.5, 0, 0.2, 1.15);
+  }
+  57%, 62% {
+    transform: rotateX(0deg) rotateY(var(--ty)) var(--pos);
+    animation-timing-function: cubic-bezier(0.5, 0, 0.2, 1.15);
+  }
+  69%, 74% {
+    transform: rotateX(0deg) rotateY(var(--a1)) var(--pos);
+    animation-timing-function: cubic-bezier(0.5, 0, 0.2, 1.15);
+  }
+  81%, 100% {
+    transform: rotateX(0deg) rotateY(0deg) var(--pos);
+  }
+}
+@keyframes mc-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2.5cqw); }
+}
+@keyframes mc-hop {
+  0%, 20%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8cqw); }
+}
+@keyframes mc-sway {
+  0%, 100% { transform: rotateX(-24deg) rotateY(28deg); }
+  50% { transform: rotateX(-24deg) rotateY(52deg); }
+}
+@keyframes mc-shadow {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(0.88); }
+}
+
+/* Bottom sheet entrance (catalog filters). */
+.sheet-backdrop {
+  animation: sheet-fade 0.2s ease-out both;
+}
+.sheet-up {
+  animation: sheet-up 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes sheet-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet-backdrop,
+  .sheet-up {
+    animation: none;
+  }
 }

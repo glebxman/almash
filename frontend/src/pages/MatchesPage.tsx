@@ -121,7 +121,7 @@ export default function MatchesPage() {
                   type="button"
                   disabled={busyId === m.theirItem.id}
                   onClick={() => startFromMutual(m)}
-                  className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-coral px-4 text-sm font-medium text-white sm:w-auto"
+                  className="btn-3d btn-3d-coral inline-flex min-h-11 w-full items-center justify-center rounded-xl px-4 text-sm font-bold sm:w-auto"
                 >
                   {t("matches.start")}
                 </button>
@@ -168,7 +168,7 @@ export default function MatchesPage() {
                 </div>
                 <Link
                   to={`/items/${m.theirItem.id}`}
-                  className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-forest px-4 py-2 text-sm text-cream sm:w-auto"
+                  className="btn-3d btn-3d-violet inline-flex min-h-11 w-full items-center justify-center rounded-xl px-4 py-2 text-sm font-bold sm:w-auto"
                 >
                   {t("matches.open")}
                 </Link>
