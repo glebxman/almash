@@ -15,7 +15,7 @@ export function LoginHero() {
         decoding="async"
         fetchPriority="high"
         draggable={false}
-        className="pointer-events-none mt-1 block w-full select-none"
+        className="pointer-events-none mx-auto mt-2 block w-[80%] max-w-[330px] select-none"
       />
     </div>
   );

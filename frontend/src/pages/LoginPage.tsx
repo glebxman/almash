@@ -39,6 +39,7 @@ export default function LoginPage() {
   const [city, setCity] = useState("Ташкент");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [telegramBusy, setTelegramBusy] = useState(false);
   const inMiniApp = isTelegramMiniApp();
   const canTelegram = inMiniApp || Boolean(telegram.botId);
   const isRegister = mode === "register";
@@ -88,6 +89,7 @@ export default function LoginPage() {
 
   const onTelegram = async () => {
     setBusy(true);
+    setTelegramBusy(true);
     setError("");
     try {
       const initData = getTelegramInitData();
@@ -104,6 +106,7 @@ export default function LoginPage() {
       setError(e instanceof Error ? e.message : t("login.telegramError"));
     } finally {
       setBusy(false);
+      setTelegramBusy(false);
     }
   };
 
@@ -223,7 +226,7 @@ export default function LoginPage() {
             disabled={busy}
             className="!mt-6 flex h-14 w-full items-center justify-center rounded-full bg-[#0E0E12] text-base font-bold text-white transition active:scale-[0.98] disabled:opacity-60"
           >
-            {busy ? (
+            {busy && !telegramBusy ? (
               <Loader2 size={22} className="animate-spin" />
             ) : isRegister ? (
               t("login.create")
@@ -246,7 +249,11 @@ export default function LoginPage() {
           className="flex h-14 w-full items-center justify-center gap-2.5 rounded-full bg-white text-[15px] font-bold text-[#0E0E12] shadow-[0_8px_22px_-14px_rgba(14,14,18,0.35)] transition hover:shadow-[0_10px_26px_-14px_rgba(14,14,18,0.45)] active:scale-[0.98] disabled:opacity-55"
         >
           <span className="grid h-7 w-7 place-items-center rounded-full bg-[#2AABEE] text-white">
-            <TelegramMark />
+            {telegramBusy ? (
+              <Loader2 size={15} className="animate-spin" />
+            ) : (
+              <TelegramMark />
+            )}
           </span>
           {t("login.telegram")}
         </button>
