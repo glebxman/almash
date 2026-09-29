@@ -14,8 +14,7 @@ import { useAuth } from "./AuthProvider";
 import { mediaUrl } from "@/lib/env";
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import header_logo from "../assets/header.svg"
-
+import header_logo from "../assets/header.svg";
 
 const desktopLinks = [
   { href: "/", label: "nav.findTrade", icon: Search },
@@ -26,7 +25,6 @@ const desktopLinks = [
   { href: "/messages", label: "nav.messages", icon: MessageCircle },
   { href: "/matches", label: "nav.matches", icon: Home },
 ];
-
 
 const mobileTabs = [
   { href: "/", label: "nav.find", icon: Search },
@@ -50,114 +48,117 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-[100dvh] flex-col overflow-x-hidden">
-      <header className="sticky top-0 z-40 bg-cream/80 pt-[var(--app-inset-top)] backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-3 sm:h-16 sm:px-4">
-          <Link to="/" className="flex shrink-0 items-center gap-2">
-            {/*<span className="grid h-8 w-8 place-items-center rounded-2xl bg-forest text-sm font-black text-white shadow-[0_6px_0_#1B1828]">*/}
-            {/*  ⇄*/}
-            {/*</span>*/}
-            {/*<span className="font-display text-xl text-ink sm:text-2xl">*/}
-            {/*  SwapToy*/}
-            {/*</span>*/}
-            {/* square SVG: fits the 56px (phone) / 64px (sm+) header without distortion */}
-            <img
-              src={header_logo}  
-              alt="RETOY"
-              className="h-12 w-12 shrink-0 object-contain sm:h-14 sm:w-14"
-            />
-          </Link>
-
-          <nav className="hidden min-w-0 items-center gap-1 overflow-x-auto scrollbar-none lg:flex">
-            {desktopLinks.map(({ href, label, icon: Icon }) => (
-              <Link
-                key={href}
-                to={href}
-                title={t(label)}
-                className={clsx(
-                  "flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-2 text-[13px] font-bold transition",
-                  isActive(pathname, href)
-                    ? "bg-ink text-cream"
-                    : "text-ink/60 hover:bg-white hover:text-ink",
-                )}
-              >
-                <Icon size={16} />
-                <span className="hidden xl:inline">{t(label)}</span>
-              </Link>
-            ))}
-            {user?.role === "ADMIN" && (
-              <Link
-                to="/admin"
-                className={clsx(
-                  "flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-2 text-[13px] font-bold transition",
-                  pathname.startsWith("/admin")
-                    ? "bg-coral text-white"
-                    : "text-ink/60 hover:bg-coral/10",
-                )}
-              >
-                <Shield size={16} />
-                <span className="hidden xl:inline">{t("nav.admin")}</span>
-              </Link>
-            )}
-          </nav>
-
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <Link
-              to="/favorites"
-              className={clsx(
-                "inline-flex h-10 w-10 items-center justify-center rounded-full transition lg:hidden",
-                isActive(pathname, "/favorites")
-                  ? "bg-ink text-cream"
-                  : "bg-white text-ink shadow-sm",
-              )}
-              aria-label={t("nav.favorites")}
-            >
-              <Heart size={18} />
+      {/* The login page is chrome-free and full-bleed; it pads the safe areas itself. */}
+      {hideTabBar ? null : (
+        <header className="sticky top-0 z-40 bg-cream/80 pt-[var(--app-inset-top)] backdrop-blur-md">
+          <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-3 sm:h-16 sm:px-4">
+            <Link to="/" className="flex shrink-0 items-center gap-2">
+              <img
+                src={header_logo}
+                alt="RETOY"
+                className="h-12 w-12 shrink-0 object-contain sm:h-14 sm:w-14"
+              />
             </Link>
-            <Link
-              to="/notifications"
-              className={clsx(
-                "inline-flex h-10 w-10 items-center justify-center rounded-full transition",
-                isActive(pathname, "/notifications")
-                  ? "bg-ink text-cream"
-                  : "bg-white text-ink shadow-sm",
+
+            <nav className="hidden min-w-0 items-center gap-1 overflow-x-auto scrollbar-none lg:flex">
+              {desktopLinks.map(({ href, label, icon: Icon }) => (
+                <Link
+                  key={href}
+                  to={href}
+                  title={t(label)}
+                  className={clsx(
+                    "flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-2 text-[13px] font-bold transition",
+                    isActive(pathname, href)
+                      ? "bg-ink text-cream"
+                      : "text-ink/60 hover:bg-white hover:text-ink",
+                  )}
+                >
+                  <Icon size={16} />
+                  <span className="hidden xl:inline">{t(label)}</span>
+                </Link>
+              ))}
+              {user?.role === "ADMIN" && (
+                <Link
+                  to="/admin"
+                  className={clsx(
+                    "flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-2 text-[13px] font-bold transition",
+                    pathname.startsWith("/admin")
+                      ? "bg-coral text-white"
+                      : "text-ink/60 hover:bg-coral/10",
+                  )}
+                >
+                  <Shield size={16} />
+                  <span className="hidden xl:inline">{t("nav.admin")}</span>
+                </Link>
               )}
-              aria-label={t("nav.notifications")}
-            >
-              <Bell size={18} />
-            </Link>
-            {user ? (
-              <Link
-                to="/profile"
-                title={t("nav.profile")}
-                aria-label={t("nav.profile")}
-                // right padding only where the name is shown (sm–lg); otherwise a plain avatar circle
-                className="flex max-w-[40vw] items-center gap-2 rounded-full bg-white p-1 text-sm font-bold shadow-sm sm:pr-3 lg:pr-1"
-              >
-                <img
-                  src={mediaUrl(user.avatarUrl) || "https://placehold.co/40x40"}
-                  alt=""
-                  className="h-8 w-8 shrink-0 rounded-full object-cover ring-2 ring-sand"
-                />
-                <span className="hidden truncate sm:inline lg:hidden">{user.name}</span>
-              </Link>
-            ) : (
-              <Link
-                to="/login"
-                className="btn-3d btn-3d-ink btn-3d-sm inline-flex h-10 items-center rounded-full px-4 text-sm font-bold"
-              >
-                {t("nav.login")}
-              </Link>
-            )}
+            </nav>
+
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              {user && (
+                <>
+                  <Link
+                    to="/favorites"
+                    className={clsx(
+                      "inline-flex h-10 w-10 items-center justify-center rounded-full transition lg:hidden",
+                      isActive(pathname, "/favorites")
+                        ? "bg-ink text-cream"
+                        : "bg-white text-ink shadow-sm",
+                    )}
+                    aria-label={t("nav.favorites")}
+                  >
+                    <Heart size={18} />
+                  </Link>
+                  <Link
+                    to="/notifications"
+                    className={clsx(
+                      "inline-flex h-10 w-10 items-center justify-center rounded-full transition",
+                      isActive(pathname, "/notifications")
+                        ? "bg-ink text-cream"
+                        : "bg-white text-ink shadow-sm",
+                    )}
+                    aria-label={t("nav.notifications")}
+                  >
+                    <Bell size={18} />
+                  </Link>
+                </>
+              )}
+              {user ? (
+                <Link
+                  to="/profile"
+                  title={t("nav.profile")}
+                  aria-label={t("nav.profile")}
+                  className="flex max-w-[40vw] items-center gap-2 rounded-full bg-white p-1 text-sm font-bold shadow-sm sm:pr-3 lg:pr-1"
+                >
+                  <img
+                    src={
+                      mediaUrl(user.avatarUrl) || "https://placehold.co/40x40"
+                    }
+                    alt=""
+                    className="h-8 w-8 shrink-0 rounded-full object-cover ring-2 ring-sand"
+                  />
+                  <span className="hidden truncate sm:inline lg:hidden">
+                    {user.name}
+                  </span>
+                </Link>
+              ) : (
+                <Link
+                  to="/login"
+                  className="btn-3d btn-3d-ink btn-3d-sm inline-flex h-10 items-center rounded-full px-4 text-sm font-bold"
+                >
+                  {t("nav.login")}
+                </Link>
+              )}
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       <main
         className={clsx(
-          "mx-auto w-full flex-1 px-3 pt-3 sm:px-4 sm:py-6 md:pb-8",
+          "mx-auto w-full flex-1",
           hideTabBar
-            ? "pb-[max(1.5rem,var(--app-inset-bottom))]"
-            : "pb-[calc(6.25rem+var(--app-inset-bottom))]",
+            ? "flex flex-col"
+            : "px-3 pb-[calc(6.25rem+var(--app-inset-bottom))] pt-3 sm:px-4 sm:py-6 md:pb-8",
           swipeHome ? "max-w-lg" : "max-w-6xl",
         )}
       >
@@ -192,9 +193,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                           : "nav-sink h-9 w-9",
                     )}
                   >
-                    <Icon size={emphasize ? 22 : 20} strokeWidth={active ? 2.6 : 2} />
+                    <Icon
+                      size={emphasize ? 22 : 20}
+                      strokeWidth={active ? 2.6 : 2}
+                    />
                   </span>
-                  <span className={clsx(emphasize && "text-sand")}>{t(label)}</span>
+                  <span className={clsx(emphasize && "text-sand")}>
+                    {t(label)}
+                  </span>
                 </Link>
               );
             })}

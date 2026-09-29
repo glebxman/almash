@@ -237,6 +237,8 @@ const uz = {
     errTaken: "Bu login band — boshqasini o'ylab toping",
     errName: "Ismingizni kiriting",
     errCity: "Shaharni kiriting",
+    noAccount: "Akkauntingiz yo'qmi?",
+    haveAccount: "Akkauntingiz bormi?",
   },
   picker: {
     placeholder: "Sana va vaqtni tanlang",

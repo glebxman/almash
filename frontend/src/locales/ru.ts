@@ -243,6 +243,8 @@ const ru = {
     errTaken: "Такой логин уже занят — придумайте другой",
     errName: "Укажите имя",
     errCity: "Укажите город",
+    noAccount: "Нет аккаунта?",
+    haveAccount: "Уже есть аккаунт?",
   },
   picker: {
     placeholder: "Выберите дату и время",
