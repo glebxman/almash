@@ -12,7 +12,8 @@ import {
 import clsx from "clsx";
 import { useAuth } from "./AuthProvider";
 import { mediaUrl } from "@/lib/env";
-import { Link, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { Link, useLocation, useNavigationType } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import header_logo from "../assets/header.svg";
 
@@ -45,6 +46,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
   const swipeHome = pathname === "/";
   const hideTabBar = pathname === "/login";
+  const navigationType = useNavigationType();
+
+  // A new page opens at the top; Back (POP) keeps the browser's restored position.
+  useEffect(() => {
+    if (navigationType !== "POP")
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [pathname, navigationType]);
 
   return (
     <div className="flex min-h-[100dvh] flex-col overflow-x-hidden">

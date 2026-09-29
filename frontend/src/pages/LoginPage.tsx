@@ -1,12 +1,12 @@
 import {
   useEffect,
   useState,
+  type FocusEvent,
   type FormEvent,
   type ReactNode,
 } from "react";
 import {
   AlertCircle,
-  ArrowRight,
   AtSign,
   Loader2,
   Lock,
@@ -139,7 +139,11 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form className="mt-5 space-y-3" onSubmit={onSubmit}>
+        <form
+          className="mt-5 space-y-3"
+          onSubmit={onSubmit}
+          onFocus={keepFieldVisible}
+        >
           {isRegister && (
             <div className="space-y-3 animate-rise">
               <Field icon={<UserRound size={19} />}>
@@ -182,6 +186,7 @@ export default function LoginPage() {
               }}
               required
               autoComplete="username"
+              enterKeyHint="next"
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
@@ -207,6 +212,7 @@ export default function LoginPage() {
                 mode === "register" ? "new-password" : "current-password"
               }
               placeholder={t("login.password")}
+              enterKeyHint="go"
               aria-label={t("login.password")}
               className={`${INPUT} !pr-12`}
             />
@@ -215,16 +221,15 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={busy}
-            className="group !mt-5 flex h-14 w-full items-center justify-between rounded-full bg-[#0E0E12] pl-7 pr-1.5 text-[15px] font-bold text-white shadow-[0_14px_28px_-12px_rgba(14,14,18,0.6)] transition active:scale-[0.98] disabled:opacity-60"
+            className="!mt-6 flex h-14 w-full items-center justify-center rounded-full bg-[#0E0E12] text-base font-bold text-white transition active:scale-[0.98] disabled:opacity-60"
           >
-            <span>{isRegister ? t("login.create") : t("login.submit")}</span>
-            <span className="grid h-11 w-11 place-items-center rounded-full bg-sand text-[#0E0E12] transition-transform duration-300 group-hover:translate-x-0.5">
-              {busy ? (
-                <Loader2 size={20} className="animate-spin" />
-              ) : (
-                <ArrowRight size={20} strokeWidth={2.6} />
-              )}
-            </span>
+            {busy ? (
+              <Loader2 size={22} className="animate-spin" />
+            ) : isRegister ? (
+              t("login.create")
+            ) : (
+              t("login.submit")
+            )}
           </button>
         </form>
 
@@ -263,6 +268,17 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+// In the Telegram WebView the keyboard can cover the lower fields; once it has
+// opened, bring the focused input back to the middle of the screen.
+function keepFieldVisible(event: FocusEvent<HTMLFormElement>) {
+  const field = event.target;
+  if (!(field instanceof HTMLInputElement)) return;
+  window.setTimeout(
+    () => field.scrollIntoView({ block: "center", behavior: "smooth" }),
+    300,
   );
 }
 
