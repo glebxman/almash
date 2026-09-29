@@ -6,11 +6,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { dateLocale, useLabels } from "@/lib/labels";
 import { Loader2, MessageCircle } from "lucide-react";
-import i18n from "@/lib/i18n";
+import i18n, { LANGUAGES } from "@/lib/i18n";
 
 // Placeholder body stored for media-only messages (either UI language).
 function isAttachmentOnly(body: string) {
-  return ["ru", "uz"].some((lng) => i18n.t("pages.messages.attachment", { lng }) === body.trim());
+  return LANGUAGES.some((lng) => i18n.t("pages.messages.attachment", { lng }) === body.trim());
 }
 
 type ChatRow = {

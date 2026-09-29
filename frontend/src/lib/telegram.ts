@@ -82,7 +82,7 @@ export async function requestTelegramWidgetAuth(botId: number) {
   const auth = window.Telegram?.Login?.auth;
   if (!auth) throw new Error(i18n.t("errors.tgLoginUnavailable"));
   return new Promise<TelegramAuthPayload>((resolve, reject) => {
-    auth({ bot_id: botId, request_access: "write", lang: "ru" }, (data) => {
+    auth({ bot_id: botId, request_access: "write", lang: i18n.language }, (data) => {
       if (!data) {
         reject(new Error(i18n.t("errors.tgLoginCancelled")));
         return;

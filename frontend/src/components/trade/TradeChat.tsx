@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Loader2, Paperclip, SendHorizontal, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { LANGUAGES } from "@/lib/i18n";
 import { api } from "@/lib/client";
 import { mediaUrl } from "@/lib/env";
 import { dateLocale } from "@/lib/labels";
@@ -83,7 +84,7 @@ export function TradeChat({
 
   // Placeholder body the API needs for media-only messages; not shown in bubbles.
   const attachmentLabels = new Set(
-    ["ru", "uz"].map((lng) => i18n.t("pages.messages.attachment", { lng })),
+    LANGUAGES.map((lng) => i18n.t("pages.messages.attachment", { lng })),
   );
 
   // Keep the view pinned to the newest message unless the user scrolled up.

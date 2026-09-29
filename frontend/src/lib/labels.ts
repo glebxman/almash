@@ -57,5 +57,7 @@ export function useLabels() {
 
 /** Locale for Intl/Date formatting that follows the interface language. */
 export function dateLocale() {
-  return i18n.language === "uz" ? "uz-Latn-UZ" : "ru-RU";
+  if (i18n.language === "uz") return "uz-Latn-UZ";
+  if (i18n.language === "en") return "en-GB";
+  return "ru-RU";
 }

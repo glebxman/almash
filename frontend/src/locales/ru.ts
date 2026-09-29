@@ -3,6 +3,7 @@ const ru = {
     label: "Язык",
     ru: "Русский",
     uz: "O'zbekcha",
+    en: "English",
   },
   nav: {
     findTrade: "Найти обмен",

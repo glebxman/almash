@@ -2,8 +2,9 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import ru from "@/locales/ru";
 import uz from "@/locales/uz";
+import en from "@/locales/en";
 
-export const LANGUAGES = ["ru", "uz"] as const;
+export const LANGUAGES = ["ru", "uz", "en"] as const;
 export type Language = (typeof LANGUAGES)[number];
 export const DEFAULT_LANGUAGE: Language = "ru";
 
@@ -23,6 +24,7 @@ void i18n.use(initReactI18next).init({
   resources: {
     ru: { translation: ru },
     uz: { translation: uz },
+    en: { translation: en },
   },
   // Default is Russian regardless of the browser language; the user's
   // choice from the profile is remembered in localStorage.
