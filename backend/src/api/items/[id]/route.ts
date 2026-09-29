@@ -79,6 +79,8 @@ const patchSchema = z.object({
   description: z.string().min(10).max(4000).optional(),
   wantText: z.string().optional(),
   condition: z.enum(CONDITIONS as unknown as [string, ...string[]]).optional(),
+  // A toy received in a trade starts private; this lists it in the catalog.
+  publish: z.literal(true).optional(),
 });
 
 export async function PATCH(req: AppRequest, ctx: Ctx) {
@@ -97,7 +99,10 @@ export async function PATCH(req: AppRequest, ctx: Ctx) {
       );
     }
 
-    const body = patchSchema.parse(await req.json());
+    const { publish, ...body } = patchSchema.parse(await req.json());
+    if (publish && item.status !== "RECEIVED") {
+      return jsonError("Опубликовать можно только полученную в обмене игрушку", 400);
+    }
 
     // Same money/contact filter as on creation — otherwise a clean listing
     // could be edited into "продам за 100 000 сум" afterwards.
@@ -133,11 +138,11 @@ export async function PATCH(req: AppRequest, ctx: Ctx) {
     }
     const updated = await prisma.item.update({
       where: { id },
-      data: body,
+      data: publish ? { ...body, status: "ACTIVE" } : body,
     });
     await writeAudit({
       userId: user.id,
-      action: "ITEM_UPDATED",
+      action: publish ? "ITEM_PUBLISHED" : "ITEM_UPDATED",
       meta: { itemId: id, fields: Object.keys(body) },
     });
     return jsonOk({ item: updated });

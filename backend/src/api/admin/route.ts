@@ -486,8 +486,35 @@ export async function POST(req: AppRequest) {
             where: { tradeId: trade.id },
             data: { confirmedTerms: false, viewedItemsAck: false },
           });
+          // A completed trade already moved each item to the other party:
+          // hand it back to its original owner with the frozen listing data.
+          for (const ti of trade.items.filter((i) => i.version === trade.currentVersion)) {
+            let snap: Record<string, unknown> = {};
+            try {
+              snap = ti.itemSnapshot ? JSON.parse(ti.itemSnapshot) : {};
+            } catch {
+              snap = {};
+            }
+            const str = (v: unknown) => (typeof v === "string" ? v : null);
+            const original = await prisma.user.findUnique({
+              where: { id: ti.ownerId },
+              select: { city: true, district: true },
+            });
+            await prisma.item.updateMany({
+              where: { id: ti.itemId, ownerId: { not: ti.ownerId } },
+              data: {
+                ownerId: ti.ownerId,
+                city: str(snap.city) ?? original?.city ?? "",
+                district: str(snap.district) ?? original?.district ?? null,
+                wantType: str(snap.wantType) ?? "ANY",
+                wantText: str(snap.wantText),
+                wantCategories: str(snap.wantCategories),
+                wantBrands: str(snap.wantBrands),
+              },
+            });
+          }
           await prisma.item.updateMany({
-            where: { id: { in: currentIds }, status: { in: ["ACTIVE", "TRADED"] } },
+            where: { id: { in: currentIds }, status: { in: ["ACTIVE", "TRADED", "RECEIVED"] } },
             data: { status: "IN_TRADE" },
           });
         } else {

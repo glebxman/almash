@@ -72,7 +72,12 @@ export default function ItemPage() {
     setMyItemsLoading(true);
     api<{ items: MyItem[] }>(`/api/items?ownerId=${user.id}`)
       .then((d) =>
-        setMyItems(d.items.filter((i) => (i as MyItem & { status?: string }).status !== "HIDDEN")),
+        // Only listed toys can be offered (received-in-trade ones must be published first).
+        setMyItems(
+          d.items.filter(
+            (i) => !["HIDDEN", "RECEIVED", "TRADED"].includes((i as MyItem & { status?: string }).status ?? ""),
+          ),
+        ),
       )
       .catch(() => setMyItems([]))
       .finally(() => setMyItemsLoading(false));

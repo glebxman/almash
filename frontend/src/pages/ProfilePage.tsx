@@ -22,6 +22,7 @@ import {
   ShieldCheck,
   Star,
   Trash2,
+  Upload,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -100,6 +101,7 @@ export default function ProfilePage() {
   const { confirm } = useFeedback();
   const [items, setItems] = useState<(ItemCardData & { status?: string })[]>([]);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [publishingId, setPublishingId] = useState<string | null>(null);
   const [listingErr, setListingErr] = useState("");
   const [sets, setSets] = useState<
       {
@@ -482,10 +484,53 @@ export default function ProfilePage() {
               <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
                 {items.map((item) => {
                   const inTrade = item.status === "IN_TRADE";
+                  // Got it in a trade: private until the owner lists it.
+                  const received = item.status === "RECEIVED";
                   const deleting = deletingId === item.id;
                   return (
-                      <div key={item.id} className={`relative transition ${deleting ? "opacity-50" : ""}`}>
-                        <ItemCard item={item} />
+                      <div
+                          key={item.id}
+                          className={`relative flex flex-col gap-2 transition ${deleting ? "opacity-50" : ""}`}
+                      >
+                        <div className="relative flex-1">
+                          <ItemCard item={item} />
+                          {received && (
+                              <span className="pointer-events-none absolute left-2 top-2 rounded-full bg-sand px-2.5 py-1 text-[11px] font-extrabold text-ink shadow-md">
+                                {t("profile.listings.received")}
+                              </span>
+                          )}
+                        </div>
+                        {received && (
+                            <button
+                                type="button"
+                                disabled={publishingId === item.id}
+                                onClick={async () => {
+                                  setListingErr("");
+                                  setPublishingId(item.id);
+                                  try {
+                                    await api(`/api/items/${item.id}`, {
+                                      method: "PATCH",
+                                      body: JSON.stringify({ publish: true }),
+                                    });
+                                    setItems((prev) =>
+                                        prev.map((i) => (i.id === item.id ? { ...i, status: "ACTIVE" } : i)),
+                                    );
+                                  } catch (e) {
+                                    setListingErr(e instanceof Error ? e.message : t("common.error"));
+                                  } finally {
+                                    setPublishingId(null);
+                                  }
+                                }}
+                                className="btn-3d btn-3d-violet btn-3d-sm inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full px-3 text-xs font-extrabold"
+                            >
+                              {publishingId === item.id ? (
+                                  <Loader2 size={14} className="animate-spin" />
+                              ) : (
+                                  <Upload size={14} strokeWidth={2.6} />
+                              )}
+                              {t("profile.listings.publish")}
+                            </button>
+                        )}
                         <button
                             type="button"
                             disabled={deleting}

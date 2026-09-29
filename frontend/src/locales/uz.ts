@@ -90,6 +90,8 @@ const uz = {
     },
     listings: {
       title: "Mening e'lonlarim",
+      received: "Olingan",
+      publish: "E'lon qilish",
       add: "+ Qo'shish",
       delete: "E'lonni o'chirish",
       confirmDelete: "«{{title}}» o'chirilsinmi? E'lon katalogdan yo'qoladi.",

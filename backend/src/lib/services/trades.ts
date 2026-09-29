@@ -451,13 +451,39 @@ export async function completeTrade(tradeId: string) {
   });
   if (!trade) return;
 
-  const currentIds = trade.items
-    .filter((i) => i.version === trade.currentVersion)
-    .map((i) => i.itemId);
+  const current = trade.items.filter((i) => i.version === trade.currentVersion);
+  const currentIds = current.map((i) => i.itemId);
 
-  await prisma.item.updateMany({
-    where: { id: { in: currentIds } },
-    data: { status: "TRADED" },
+  // Each item moves to the other party. It lands in their profile as
+  // RECEIVED (not public) with their location and no "want" wishes of the
+  // previous owner; they can publish it later to trade it on.
+  const owners = await prisma.user.findMany({
+    where: { id: { in: [trade.initiatorId, trade.recipientId] } },
+    select: { id: true, city: true, district: true },
+  });
+  for (const ti of current) {
+    const newOwner = owners.find(
+      (u) => u.id === (ti.ownerId === trade.initiatorId ? trade.recipientId : trade.initiatorId),
+    );
+    if (!newOwner) continue;
+    await prisma.item.update({
+      where: { id: ti.itemId },
+      data: {
+        ownerId: newOwner.id,
+        status: "RECEIVED",
+        city: newOwner.city,
+        district: newOwner.district,
+        wantType: "ANY",
+        wantText: null,
+        wantCategories: null,
+        wantBrands: null,
+      },
+    });
+  }
+  // Likes on / offers of these items belonged to the old listing and owner;
+  // left in place they could produce matches for the wrong person.
+  await prisma.swipe.deleteMany({
+    where: { OR: [{ itemId: { in: currentIds } }, { offeredItemId: { in: currentIds } }] },
   });
 
   for (const p of trade.parties) {
@@ -479,7 +505,7 @@ export async function completeTrade(tradeId: string) {
       tradeId,
       type: "TRADE_COMPLETED",
       title: "Обмен завершён",
-      body: `${trade.publicId} успешно завершён. Оставьте отзыв.`,
+      body: `${trade.publicId} успешно завершён. Полученные игрушки уже в вашем профиле — оставьте отзыв.`,
     });
   }
 

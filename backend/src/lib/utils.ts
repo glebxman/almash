@@ -86,6 +86,14 @@ export function itemSnapshot(item: {
   missingParts: string | null;
   serialNumber: string | null;
   media?: { url: string; type: string; hash: string | null }[];
+  // Listing details that change when the item moves to its new owner;
+  // kept so an admin can hand the item back after a dispute.
+  city?: string;
+  district?: string | null;
+  wantType?: string;
+  wantText?: string | null;
+  wantCategories?: string | null;
+  wantBrands?: string | null;
 }) {
   return JSON.stringify({
     id: item.id,
@@ -100,6 +108,12 @@ export function itemSnapshot(item: {
     missingParts: item.missingParts,
     serialNumber: item.serialNumber,
     media: item.media ?? [],
+    city: item.city,
+    district: item.district,
+    wantType: item.wantType,
+    wantText: item.wantText,
+    wantCategories: item.wantCategories,
+    wantBrands: item.wantBrands,
     frozenAt: new Date().toISOString(),
   });
 }
