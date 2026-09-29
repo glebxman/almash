@@ -7,11 +7,11 @@ import {
 } from "react";
 import {
   AlertCircle,
-  AtSign,
+  Building2,
   Loader2,
-  Lock,
-  MapPin,
-  UserRound,
+  CircleUserRound,
+  KeyRound,
+  Smile,
 } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { PasswordInput } from "@/components/PasswordInput";
@@ -26,7 +26,7 @@ import { useTranslation } from "react-i18next";
 
 // Pill fields; 16px text keeps iOS from zooming in on focus.
 const INPUT =
-  "h-14 w-full rounded-full border border-transparent bg-white pl-12 pr-5 text-base font-semibold text-ink shadow-[0_8px_22px_-14px_rgba(14,14,18,0.35)] outline-none transition placeholder:font-medium placeholder:text-ink/35 focus:border-forest focus:ring-4 focus:ring-mist [&:-webkit-autofill]:shadow-[inset_0_0_0_100px_#fff] [&:-webkit-autofill]:[-webkit-text-fill-color:#17151F]";
+  "h-14 w-full rounded-full border border-transparent bg-white pl-[3.75rem] pr-5 text-base font-semibold text-ink shadow-[0_8px_22px_-14px_rgba(14,14,18,0.35)] outline-none transition placeholder:font-medium placeholder:text-ink/35 focus:border-forest focus:ring-4 focus:ring-mist [&:-webkit-autofill]:shadow-[inset_0_0_0_100px_#fff] [&:-webkit-autofill]:[-webkit-text-fill-color:#17151F]";
 
 export default function LoginPage() {
   const { user, login, register, loginTelegram, loading, telegram } = useAuth();
@@ -149,7 +149,7 @@ export default function LoginPage() {
         >
           {isRegister && (
             <div className="space-y-3 animate-rise">
-              <Field icon={<UserRound size={19} />}>
+              <Field icon={<Smile size={18} strokeWidth={2.2} />}>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -160,7 +160,7 @@ export default function LoginPage() {
                   className={INPUT}
                 />
               </Field>
-              <Field icon={<MapPin size={19} />}>
+              <Field icon={<Building2 size={18} strokeWidth={2.2} />}>
                 <input
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
@@ -174,7 +174,7 @@ export default function LoginPage() {
           )}
 
           <Field
-            icon={<AtSign size={19} />}
+            icon={<CircleUserRound size={18} strokeWidth={2.2} />}
             hint={isRegister ? t("login.usernameRule") : undefined}
           >
             <input
@@ -203,7 +203,7 @@ export default function LoginPage() {
           </Field>
 
           <Field
-            icon={<Lock size={19} />}
+            icon={<KeyRound size={18} strokeWidth={2.2} />}
             hint={isRegister ? t("login.passwordRule") : undefined}
           >
             <PasswordInput
@@ -248,13 +248,11 @@ export default function LoginPage() {
           onClick={onTelegram}
           className="flex h-14 w-full items-center justify-center gap-2.5 rounded-full bg-white text-[15px] font-bold text-[#0E0E12] shadow-[0_8px_22px_-14px_rgba(14,14,18,0.35)] transition hover:shadow-[0_10px_26px_-14px_rgba(14,14,18,0.45)] active:scale-[0.98] disabled:opacity-55"
         >
-          <span className="grid h-7 w-7 place-items-center rounded-full bg-[#2AABEE] text-white">
-            {telegramBusy ? (
-              <Loader2 size={15} className="animate-spin" />
-            ) : (
-              <TelegramMark />
-            )}
-          </span>
+          {telegramBusy ? (
+            <Loader2 size={24} className="animate-spin text-[#229ED9]" />
+          ) : (
+            <TelegramLogo />
+          )}
           {t("login.telegram")}
         </button>
         {!canTelegram && (
@@ -301,7 +299,7 @@ function Field({
   return (
     <div className="group">
       <div className="relative">
-        <span className="pointer-events-none absolute left-[1.1rem] top-1/2 z-10 -translate-y-1/2 text-ink/35 transition-colors group-focus-within:text-ink">
+        <span className="pointer-events-none absolute left-2 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-mist text-forest transition-colors duration-200 group-focus-within:bg-forest group-focus-within:text-white">
           {icon}
         </span>
         {children}
@@ -315,12 +313,20 @@ function Field({
   );
 }
 
-function TelegramMark() {
+/** Official Telegram logo: white plane on the brand-blue gradient circle. */
+function TelegramLogo() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden>
+    <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden>
+      <defs>
+        <linearGradient id="tg-logo" x1="0.5" y1="0" x2="0.5" y2="1">
+          <stop offset="0" stopColor="#2AABEE" />
+          <stop offset="1" stopColor="#229ED9" />
+        </linearGradient>
+      </defs>
+      <circle cx="12" cy="12" r="12" fill="url(#tg-logo)" />
       <path
-        fill="currentColor"
-        d="M21.9 4.3c.3-.9-.5-1.6-1.3-1.3L2.6 9.2c-.9.3-.9 1.5.1 1.8l4.7 1.5 1.8 5.5c.3.8 1.3 1 1.9.4l2.7-2.7 4.7 3.5c.7.5 1.7.1 1.9-.7z"
+        fill="#fff"
+        d="M5.43 11.87c3.5-1.52 5.83-2.53 7-3.01 3.33-1.39 4.02-1.63 4.47-1.64.1 0 .32.02.47.14.12.1.15.23.17.33.02.09.04.3.02.47-.18 1.9-.96 6.5-1.36 8.63-.17.9-.5 1.2-.82 1.23-.7.06-1.23-.46-1.9-.9-1.06-.7-1.65-1.13-2.68-1.8-1.19-.79-.42-1.22.26-1.92.18-.19 3.25-2.98 3.31-3.23 0-.03.01-.15-.06-.21-.07-.06-.17-.04-.25-.02-.1.02-1.79 1.14-5.06 3.35-.48.33-.91.49-1.3.48-.43-.01-1.25-.24-1.87-.44-.75-.24-1.35-.37-1.3-.79.03-.22.33-.44.9-.66z"
       />
     </svg>
   );
