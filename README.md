@@ -2,8 +2,6 @@
 
 Обмен игрушками и детскими аксессуарами **без денег, продаж и доплат**
 
-Это **два независимых приложения**, как `client/` и `server/` в synapse-animals: у каждого свой `package.json`, свои зависимости, свой запуск. Общего npm workspace нет.
-
 ```
 almash/
   frontend/   React SPA (Vite)     → http://localhost:5173
